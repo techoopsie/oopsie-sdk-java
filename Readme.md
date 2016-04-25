@@ -1,1 +1,2 @@
-a readme
+#Oopsie Java SDK
+More info here soon.
