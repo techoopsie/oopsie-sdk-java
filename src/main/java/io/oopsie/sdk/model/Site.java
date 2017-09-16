@@ -213,11 +213,11 @@ public class Site {
      * Executes the passed in {@link Statement}. 
      * 
      * @param statement the {@link Statement} to execute
-     * @return the {@link Result}
+     * @return the {@link ResultSet}
      * @throws AlreadyExecutedException if passed in {@link Statement} was previously executed
      * @throws StatementExecutionException if execution could not be fullfilled
      */
-    public final Result execute(Statement statement) throws AlreadyExecutedException, StatementExecutionException {
+    public final ResultSet execute(Statement statement) throws AlreadyExecutedException, StatementExecutionException {
         
         return statement.execute(apiUri, headers);
     }
@@ -226,11 +226,11 @@ public class Site {
      * Executes passed in {@link Statement} asynchronously.
      * 
      * @param statement the {@link Statement} to execute
-     * @return A {@link Future} {@link Result}
+     * @return A {@link Future} {@link ResultSet}
      * @throws AlreadyExecutedException if passed in {@link Statement} was previously executed
      * @throws StatementExecutionException if execution could not be fullfilled
      */
-    public Future<Result> executeAsync(Statement statement) throws AlreadyExecutedException,StatementExecutionException {
+    public Future<ResultSet> executeAsync(Statement statement) throws AlreadyExecutedException,StatementExecutionException {
         
         return cachedThreadPool.submit(() -> statement.execute(apiUri, headers));
     }

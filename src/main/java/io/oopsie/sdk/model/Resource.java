@@ -158,8 +158,8 @@ public class Resource {
     /**
      * Returns a {@link CreateStatement}.
      * 
-     * @see CreateStatement#set(java.lang.String, java.lang.Object) 
-     * @see CreateStatement#set(java.util.Map) 
+     * @see CreateStatement#withParam(java.lang.String, java.lang.Object) 
+     * @see CreateStatement#withParams(java.util.Map) 
      * @return a {@link CreateStatement}
      */
     public CreateStatement create() {

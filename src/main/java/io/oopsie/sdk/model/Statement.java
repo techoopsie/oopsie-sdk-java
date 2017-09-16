@@ -4,6 +4,8 @@ import io.oopsie.sdk.error.AlreadyExecutedException;
 import io.oopsie.sdk.error.StatementExecutionException;
 import io.oopsie.sdk.error.NotExecutedException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -21,7 +23,7 @@ public abstract class Statement {
     private Object requestBody;
     private Map<String, Object> queryparams; 
     private boolean executed;
-    private Result result;
+    private ResultSet result;
 
     Statement(Resource resource) {
         this.resource = resource;
@@ -36,11 +38,11 @@ public abstract class Statement {
     }
     
     /**
-     * Returns the {@link Result} for the executed {@link Statement}.
-     * @return the {@link Result}
+     * Returns the {@link ResultSet} for the executed {@link Statement}.
+     * @return the {@link ResultSet}
      * @throws NotExecutedException 
      */
-    public final Result getResult() throws NotExecutedException {
+    public final ResultSet getResult() throws NotExecutedException {
         if(!isExecuted()) {
             throw new NotExecutedException("Statement not yet executed");
         }
@@ -83,7 +85,7 @@ public abstract class Statement {
         this.queryparams = queryparams;
     }
     
-    protected Result execute(URI requestBaseApiUri, HttpHeaders baseHeaders)
+    protected ResultSet execute(URI requestBaseApiUri, HttpHeaders baseHeaders)
             throws AlreadyExecutedException, StatementExecutionException {
         
         if(isExecuted()) {
@@ -116,17 +118,26 @@ public abstract class Statement {
         } catch(RestClientException ex) {
             if(ex instanceof HttpClientErrorException) {
                 throw new StatementExecutionException(((HttpClientErrorException)ex).getResponseBodyAsString());
+            } else {
+                throw ex;
             }
         }
         
-        Object responseBody = response.getBody();
+        Map<String, Object> responseBody = (Map)response.getBody();
+        if(getRequestMethod().equals(HttpMethod.GET)) {
+            List entities = (List)responseBody.get("entities");
+            this.result = new ResultSet(this, true, entities);
+        } else {
+            List data = new ArrayList();
+            data.add(requestBody);
+            this.result = new ResultSet(this, true, data);
+        }
         
         // include all 200's as accepted
         if(response.getStatusCodeValue() > 299) {
             throw new StatementExecutionException("Could not initialize OopsieSite object. "
             + response.getStatusCode().getReasonPhrase());
         }
-        this.result = new Result(this, true);
         this.executed = true;
         return this.result;
     }

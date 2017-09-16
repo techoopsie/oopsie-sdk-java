@@ -4,11 +4,14 @@ import io.oopsie.sdk.model.Application;
 import io.oopsie.sdk.model.CreateStatement;
 import io.oopsie.sdk.model.GetStatement;
 import io.oopsie.sdk.model.Resource;
-import io.oopsie.sdk.model.Result;
+import io.oopsie.sdk.model.ResultSet;
+import io.oopsie.sdk.model.Row;
 import io.oopsie.sdk.model.Site;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -50,7 +53,6 @@ public class CLI {
         // Handle for the "PersonReg" application
         Application personRegApp = site.getApplication("PersonReg");
         
-        
         // Handle for the "persons" reosurce
         Resource persons = personRegApp.getResource("persons");
         
@@ -58,16 +60,27 @@ public class CLI {
         Map<String, Object> personParams = new HashMap();
         personParams.put("firstName", "Nicolas");
         personParams.put("lastName", "Gullstrand");
-
         
         CreateStatement createPerson = persons.create()
-                .set(personParams)    // <-- We can pass in a map to set several values, or ...
-                .set("pk", "A") // <-- ... we can set them one by one ...
-                .set("ck", "B");
-        site.execute(createPerson);
+                .withParams(personParams)    // <-- We can pass in a map to withParams with several values, or ...
+                .withParam("pk", "A") // <-- ... we can add params one by one ...
+                .withParam("ck", "B");
+        ResultSet rs = site.execute(createPerson);
+        
+        Iterator<Row> iter = rs.iterator();
+        while(iter.hasNext()) {
+            Row row = iter.next();
+            System.out.println(row);
+        }
  
         GetStatement getPersons = persons.get().withParam("pk", "A");
-        Result result = site.execute(getPersons);
+        Future<ResultSet> result = site.executeAsync(getPersons);
+        ResultSet r = result.get();
+        Iterator<Row> iter2 = r.iterator();
+        while(iter2.hasNext()) {
+            Row row = iter2.next();
+            System.out.println(row.getTimestamp("cha"));
+        }
         
         // Voila! ... Now you have created a new person entity in the OOPSIE Cloud
         // go ahead and examine the result object!
