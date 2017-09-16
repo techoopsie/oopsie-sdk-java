@@ -20,14 +20,14 @@ import org.springframework.http.HttpMethod;
 public class CreateStatement extends Statement {
 
     private Map<String, Object> attribVals = new HashMap();
-    private static final Set<String> reservedAttribNames = new HashSet();
+    private static final Set<String> RESERVED_ATTRIBUTE_NAMES = new HashSet();
     static {
-        reservedAttribNames.add("cid");
-        reservedAttribNames.add("eid");
-        reservedAttribNames.add("cra");
-        reservedAttribNames.add("crb");
-        reservedAttribNames.add("cha");
-        reservedAttribNames.add("chb");
+        RESERVED_ATTRIBUTE_NAMES.add("cid");
+        RESERVED_ATTRIBUTE_NAMES.add("eid");
+        RESERVED_ATTRIBUTE_NAMES.add("cra");
+        RESERVED_ATTRIBUTE_NAMES.add("crb");
+        RESERVED_ATTRIBUTE_NAMES.add("cha");
+        RESERVED_ATTRIBUTE_NAMES.add("chb");
     }
 
     /**
@@ -59,7 +59,7 @@ public class CreateStatement extends Statement {
             throw new AlreadyExecutedException("Statement already executed.");
         }
         
-        if(reservedAttribNames.contains(attrib)) {
+        if(RESERVED_ATTRIBUTE_NAMES.contains(attrib)) {
             throw new StatementException("Attribute name " + attrib + " is reserved.");
         }
         
