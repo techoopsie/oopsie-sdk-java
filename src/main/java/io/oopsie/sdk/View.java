@@ -1,4 +1,4 @@
-package io.oopsie.sdk.model;
+package io.oopsie.sdk;
 
 import java.util.Map;
 import java.util.UUID;

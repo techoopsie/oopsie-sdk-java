@@ -1,8 +1,8 @@
-package io.oopsie.sdk.model;
+package io.oopsie.sdk;
 
 import java.util.UUID;
 
-class PartitionKey {
+class PartitionKey implements SettableAttribute {
     
     private final UUID id;
     private final String name;
@@ -28,7 +28,7 @@ class PartitionKey {
         return relationId;
     }
 
-    final DataType getType() {
+    public DataType getType() {
         return type;
     }
 }

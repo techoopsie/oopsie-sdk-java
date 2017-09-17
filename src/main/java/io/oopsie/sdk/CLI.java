@@ -1,18 +1,19 @@
 package io.oopsie.sdk;
 
-import io.oopsie.sdk.model.Application;
-import io.oopsie.sdk.model.CreateStatement;
-import io.oopsie.sdk.model.GetStatement;
-import io.oopsie.sdk.model.Resource;
-import io.oopsie.sdk.model.ResultSet;
-import io.oopsie.sdk.model.Row;
-import io.oopsie.sdk.model.Site;
+import io.oopsie.sdk.error.CLIParseCommandException;
+import com.google.common.base.Charsets;
+import io.oopsie.sdk.error.ModelException;
+import io.oopsie.sdk.error.StatementExecutionException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.Properties;
+import java.util.Scanner;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -21,72 +22,172 @@ import org.springframework.context.annotation.Bean;
 @SpringBootApplication
 public class CLI {
     
+    private Scanner terminalInput;
+    private Properties siteInfo;
+    private Site site;
+
+    public CLI() {
+        this.terminalInput = new Scanner(System.in, Charsets.UTF_8.toString());
+    }
+    public CLI(File siteInfoFile) throws IOException {
+        this();
+        siteInfo = new Properties();
+        FileInputStream fis = new FileInputStream(siteInfoFile);
+        siteInfo.load(fis);
+        fis.close();
+    }
+    
+    void start() {
+        site = new Site( 
+                siteInfo.getProperty("siteUrl"),
+                siteInfo.getProperty("customerId"), 
+                siteInfo.getProperty("siteId"),
+                siteInfo.getProperty("apiKey"));
+        site.init();
+        while(true) {
+            System.out.print("oopsh> ");
+            try {
+                printResult(executeCommand(scanTerminalInput()));
+            } catch(CLIParseCommandException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+    
+    private ResultSet executeCommand(String command) throws CLIParseCommandException {
+        
+        Deque<String> commandDeque = new ArrayDeque(Arrays.asList(command.split(" ")));
+        String first = commandDeque.poll();
+        Command head = Command.ILLEGAL;
+        try {
+            head = Command.valueOf(first.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new CLIParseCommandException("Statement '" + first + "' is not an oopsh statement command.");
+        }
+        
+        Statement statement = null;
+        switch(head) {
+            case HELP:
+                help();
+                break;
+            case CREATE:
+                statement = parseCreate(first, commandDeque);
+                break;
+            case READ:
+                System.out.println("Executing '" + head + "'");
+                break;
+            case UPDATE:
+            case DELETE:
+                System.out.println("'" + first + "' is not yet supported");
+                break;
+            case EXIT:
+                exit();
+                break;
+            case ILLEGAL:
+                System.out.println("'" + first + "' is not a recognized command");
+                break;
+        }
+        ResultSet result = null;
+        try {
+            result = site.execute(statement);
+        } catch(StatementExecutionException e) {
+            throw new CLIParseCommandException(e.getMessage());
+        }
+        return result;
+    }
+    
+    private CreateStatement parseCreate(String command, Deque<String> commandTokens) throws CLIParseCommandException {
+        
+        // next poll must application name
+        String next = commandTokens.poll();
+        Application app;
+        try {
+            app = site.getApplication(next);
+        } catch(ModelException e) {
+            throw new CLIParseCommandException("Application '" + next + "' could not be found.");
+        }
+        
+        // next poll must resource name
+        next = commandTokens.poll();
+        Resource resource;
+        try {
+            resource = app.getResource(next);
+        } catch(ModelException e) {
+            throw new CLIParseCommandException("Resource '" + next + "' could not be found.");
+        }
+        
+        CreateStatement statement = null;
+        if(commandTokens.isEmpty()) {
+            statement = resource.create();
+        } else {
+            // the rest should be attribs mapped to their values
+            Map<String, Object> attribVals = new HashMap();
+            while(!commandTokens.isEmpty()) {
+                String[] attrib = commandTokens.poll().split("=");
+                if(attrib.length < 2) {
+                    throw new CLIParseCommandException("Attribute parameter '" +  attrib[0] + "' is not valid, must conform to format '<name>=<value>'");
+                }
+                Object objectVal;
+                try {
+                    objectVal = AttributeUtils.getValueObject(resource, attrib[0], attrib[1]);
+                } catch(IllegalArgumentException | ModelException e) {
+                    throw new CLIParseCommandException(e.getMessage());
+                }
+                attribVals.put(attrib[0], objectVal);
+            }
+            statement = resource.create().withParams(attribVals);
+        }
+        
+        return statement;
+    }
+    
+    private void help() {
+        System.out.println("Printing help!");
+    }
+    
+    private void exit() {
+        System.out.println("Goodbye!");
+        System.exit(0);
+    }
+    
+    private String scanTerminalInput() {
+        return terminalInput.nextLine();
+    }
+
+    private void printResult(ResultSet result) {
+        result.all().forEach(row -> {
+            System.out.println(row.toString());
+        });
+    }
+    
     public static void main(String[] args) {
         SpringApplication.run(CLI.class, args);
     }
     
     @Bean
-    public CommandLineRunner run() throws Exception {
-        
+    public static CommandLineRunner run() throws Exception {
         return args -> {
-
-            if(args == null || args.length < 1 || args[0].equals("help")) {
-                printHelp();
+            
+            String siteInfoPath;
+            if(args.length == 1) {
+               siteInfoPath = args[0];
             } else {
-                execute(args[0], args[1], args[2], args[3]);
+                siteInfoPath = String.join("",
+                        System.getProperty("user.home"),
+                        File.separator,
+                        ".oopsie",
+                        File.separator,
+                        "oopsieSite");
             }
+            
+            CLI cli;
+            File file = new File(siteInfoPath);
+            if(file.isFile()) {
+                cli = new CLI(file);
+            } else {
+                cli = new CLI();
+            }
+            cli.start();
         };
-    }
-    
-    private static void printHelp() {
-        System.out.println("Printing help!");
-    }
-    
-    private static void execute(String apiUrl, String customerId, String siteId, String command) throws InterruptedException, ExecutionException {
-        
-        
-        // Initialize the OOPSIE site
-        String apiKey = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIwNzAwNzdhMi00ZjNiLTQxNzMtYWZlOS0zNGM3NDgzY2E4NGEiLCJkZXNjciI6ImtleTEiLCJzaXRlIjoiNzZlNzlhODktMzk2My00YzNkLWE2NzEtZDdlMmY4MzU2ZjExIiwiaXNzIjoiZmVmYTFkYmYtNWY2ZC00ZDM4LWFhYzEtMTI5OGZhODBkNGNmIiwidHlwZSI6ImFwaUtleSIsImlhdCI6MTUwNTIzNjk0NCwianRpIjoiMDcwMDc3YTItNGYzYi00MTczLWFmZTktMzRjNzQ4M2NhODRhIn0.SIRKCosWuddOAdv3wBK92oNle6N4UAfbeuoMfqCDfRQ";
-        Site site = new Site(apiUrl, customerId, siteId, apiKey);
-        site.init();
-        
-        // Handle for the "PersonReg" application
-        Application personRegApp = site.getApplication("PersonReg");
-        
-        // Handle for the "persons" reosurce
-        Resource persons = personRegApp.getResource("persons");
-        
-        // Create a "persons" entity
-        Map<String, Object> personParams = new HashMap();
-        personParams.put("firstName", "Nicolas");
-        personParams.put("lastName", "Gullstrand");
-        
-        CreateStatement createPerson = persons.create()
-                .withParams(personParams)    // <-- We can pass in a map to withParams with several values, or ...
-                .withParam("pk", "A") // <-- ... we can add params one by one ...
-                .withParam("ck", "B");
-        ResultSet rs = site.execute(createPerson);
-        
-        Iterator<Row> iter = rs.iterator();
-        while(iter.hasNext()) {
-            Row row = iter.next();
-            System.out.println(row);
-        }
- 
-        GetStatement getPersons = persons.get().withParam("pk", "A");
-        Future<ResultSet> result = site.executeAsync(getPersons);
-        ResultSet r = result.get();
-        Iterator<Row> iter2 = r.iterator();
-        while(iter2.hasNext()) {
-            Row row = iter2.next();
-            System.out.println(row.getTimestamp("cha"));
-        }
-        
-        // Voila! ... Now you have created a new person entity in the OOPSIE Cloud
-        // go ahead and examine the result object!
-        
-        // try to close gracefully with a timeout. Will exit earlier if all executions
-        // terminated before timeout otherwise forced to terminate.
-        site.close(15, TimeUnit.MINUTES);
     }
 }

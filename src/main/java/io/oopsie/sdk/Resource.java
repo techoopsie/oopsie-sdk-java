@@ -1,4 +1,4 @@
-package io.oopsie.sdk.model;
+package io.oopsie.sdk;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -116,6 +116,13 @@ public class Resource {
     public final Set<String> getAttributeNames() {
         return Collections.unmodifiableSet(attributes.keySet());
     }
+    
+    /**
+     * Must be default package access for now!
+     */
+    Map<String, Attribute> getAttributes() {
+        return Collections.unmodifiableMap(attributes);
+    }
 
     /**
      * Returns all available partition keys including
@@ -126,6 +133,13 @@ public class Resource {
     public final Set<String> getPartitionKeyNames() {
         return Collections.unmodifiableSet(partitionKeys.keySet());
     }
+    
+    /**
+     * Must be default package access for now!
+     */
+    Map<String, PartitionKey> getPartitionKeys() {
+        return Collections.unmodifiableMap(partitionKeys);
+    }
 
     /**
      * Returns  all available cluster keys including
@@ -135,6 +149,13 @@ public class Resource {
      */
     public final Set<String> getClusterKeyNames() {
         return Collections.unmodifiableSet(clusterKeys.keySet());
+    }
+    
+    /**
+     * Must be default package access for now!
+     */
+    Map<String, ClusterKey> getClusterKeys() {
+        return Collections.unmodifiableMap(clusterKeys);
     }
 
     /**

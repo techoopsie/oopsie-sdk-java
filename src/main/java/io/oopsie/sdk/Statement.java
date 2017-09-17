@@ -1,4 +1,4 @@
-package io.oopsie.sdk.model;
+package io.oopsie.sdk;
 
 import io.oopsie.sdk.error.AlreadyExecutedException;
 import io.oopsie.sdk.error.StatementExecutionException;
@@ -129,7 +129,7 @@ public abstract class Statement {
             this.result = new ResultSet(this, true, entities);
         } else {
             List data = new ArrayList();
-            data.add(requestBody);
+            data.add(responseBody);
             this.result = new ResultSet(this, true, data);
         }
         

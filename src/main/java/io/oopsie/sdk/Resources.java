@@ -1,4 +1,4 @@
-package io.oopsie.sdk.model;
+package io.oopsie.sdk;
 
 import io.oopsie.sdk.error.ModelException;
 import java.util.Map;

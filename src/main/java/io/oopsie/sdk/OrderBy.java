@@ -1,4 +1,4 @@
-package io.oopsie.sdk.model;
+package io.oopsie.sdk;
 
 public enum OrderBy {
     

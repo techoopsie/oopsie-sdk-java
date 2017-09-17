@@ -1,4 +1,4 @@
-package io.oopsie.sdk.model;
+package io.oopsie.sdk;
 
 import io.oopsie.sdk.error.DataTypeException;
 import java.text.SimpleDateFormat;
@@ -146,5 +146,19 @@ public class Row {
         if(!row.keySet().contains(name)) {
             throw new IllegalArgumentException("Name is not part of this row.");
         }
+    }
+
+    /**
+     * Pronts out the row columns and their values.
+     * @return string
+     */
+    @Override
+    public String toString() {
+        String string = "";
+        for(String col : row.keySet()) {
+            String val = row.get(col) != null ? row.get(col).toString() : "null";
+            string = String.join("", string, col, "=", val , "\t");
+        }
+        return string;
     }
 }

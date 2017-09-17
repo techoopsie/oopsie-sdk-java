@@ -1,4 +1,4 @@
-package io.oopsie.sdk.model;
+package io.oopsie.sdk;
 
 import com.google.common.collect.Sets;
 import io.oopsie.sdk.error.AlreadyExecutedException;
