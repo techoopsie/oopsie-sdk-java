@@ -1,13 +1,11 @@
 package io.oopsie.sdk;
 
-public enum Command {
+public enum Method {
     
     HELP,
     EXIT,
     CREATE,
     READ,
     UPDATE,
-    DELETE,
-    ILLEGAL;
-    
+    DELETE;
 }

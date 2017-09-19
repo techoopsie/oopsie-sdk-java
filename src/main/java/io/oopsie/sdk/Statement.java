@@ -154,4 +154,12 @@ public abstract class Statement {
         this.requestMethod = null;
         this.executed = false;
     }
+    
+    /**
+     * Returns the target resource.
+     * @return {@link Resource}
+     */
+    Resource getResource() {
+        return resource;
+    }
 }
