@@ -29,8 +29,6 @@ public enum DataType {
 //    AUDIO_CLIP("blob", 524288),  // NOT SPLIT TO PARTS
     
     
-    TIME("Time"), // Time string, such as 13:30:54.234
-    DATE("Date"), // Date string, such as 2015-05-03
     TIMESTAMP("Timestamp"),    
     
     NUMBER_DECIMAL("Decimal"),
@@ -38,7 +36,6 @@ public enum DataType {
     NUMBER_INTEGER("Integer"),
     
     UUID("UUID"),
-    UUID_TIME("TIMEUUID"),
     
     RELATION("Relation"),
     //RELATION_MANY_TO_MANY("Decimal", "string", "map", 0),

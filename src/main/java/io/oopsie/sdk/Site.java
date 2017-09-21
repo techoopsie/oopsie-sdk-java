@@ -1,5 +1,6 @@
 package io.oopsie.sdk;
 
+import io.oopsie.sdk.error.UserException;
 import io.oopsie.sdk.error.AlreadyExecutedException;
 import io.oopsie.sdk.error.ApiURIException;
 import io.oopsie.sdk.error.StatementExecutionException;
@@ -9,6 +10,7 @@ import io.oopsie.sdk.error.SiteInitializationException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -33,8 +35,10 @@ public class Site {
     private UUID customerId;
     private UUID siteId;
     private String apiKey;
-    private HttpHeaders headers;
-    private HttpEntity<String> httpEntity;
+    private String authCookie;
+    private String refreshAuthCookie;
+    //private HttpHeaders headers;
+    //private HttpEntity<String> httpEntity;
     private boolean initialized;
     private Applications applications;
 
@@ -91,7 +95,7 @@ public class Site {
      * Returns the api URI for the remote REST service
      * @return an api URI
      */
-    public final URI getApiURI() {
+    public final URI getApiUri() {
         return apiUri;
     }
 
@@ -160,6 +164,24 @@ public class Site {
         }
         this.initialized = false;
     }
+
+    /**
+     * Returns the api key currently used to authenticate {@link Statement} requests.
+     * @return api key or null of not set
+     */
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    /**
+     * Sets the api key to be used to authenticate {@link Statement} requests.
+     * You must call {@link #init()} again to reinitialize the {@link Site} object.
+     * @param apiKey the key
+     */
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+        this.initialized = false;
+    }
     
     /**
      * Initializes the {@link Site} object by calling init on the sites API
@@ -170,10 +192,14 @@ public class Site {
      */
     public final void init() throws SiteInitializationException {
         cachedThreadPool = Executors.newWorkStealingPool();
-        initHeaders();
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity response = null;
         try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("oopsie-customer-id", customerId.toString());
+            headers.set("oopsie-site-id", siteId.toString());
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+            HttpEntity httpEntity = new HttpEntity(headers);
             response = restTemplate.exchange(apiUri + "/init", HttpMethod.GET, httpEntity, Map.class);
         } catch(RestClientException ex) {
             throw new SiteInitializationException("Could not initialize OopsieSite object. "
@@ -186,17 +212,6 @@ public class Site {
         }
         this.applications = InitParser.parse(response);
         this.initialized = true;
-    }
-    
-    private void initHeaders() {
-        this.headers = new HttpHeaders();
-        this.headers.set("oopsie-customer-id", customerId.toString());
-        this.headers.set("oopsie-site-id", siteId.toString());
-        if(apiKey != null) {
-            this.headers.set("Authorization", apiKey);
-        }
-        this.headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        this.httpEntity =  new HttpEntity(headers);
     }
     
     /**
@@ -216,10 +231,14 @@ public class Site {
      * @return the {@link ResultSet}
      * @throws AlreadyExecutedException if passed in {@link Statement} was previously executed
      * @throws StatementExecutionException if execution could not be fullfilled
+     * @throws SiteInitializationException if not initialized properly
      */
-    public final ResultSet execute(Statement statement) throws AlreadyExecutedException, StatementExecutionException {
-        
-        return statement.execute(apiUri, headers);
+    public final ResultSet execute(Statement statement) throws AlreadyExecutedException,
+            StatementExecutionException, SiteInitializationException  {
+        if(!initialized) {
+            throw new SiteInitializationException("Site not initialized.");
+        }
+        return statement.execute(apiUri, customerId, siteId, apiKey, authCookie);
     }
     
     /**
@@ -229,10 +248,15 @@ public class Site {
      * @return A {@link Future} {@link ResultSet}
      * @throws AlreadyExecutedException if passed in {@link Statement} was previously executed
      * @throws StatementExecutionException if execution could not be fullfilled
+     * @throws SiteInitializationException if not initialized properly
      */
-    public Future<ResultSet> executeAsync(Statement statement) throws AlreadyExecutedException,StatementExecutionException {
+    public Future<ResultSet> executeAsync(Statement statement) throws AlreadyExecutedException,
+            StatementExecutionException, SiteInitializationException {
         
-        return cachedThreadPool.submit(() -> statement.execute(apiUri, headers));
+        if(!initialized) {
+            throw new SiteInitializationException("Site not initialized.");
+        }
+        return cachedThreadPool.submit(() -> statement.execute(apiUri, customerId, siteId, apiKey, authCookie));
     }
     
     /**
@@ -262,6 +286,71 @@ public class Site {
             cachedThreadPool.shutdownNow();
         }
         return terminated;
+    }
+    
+    /**
+     * Logging in using passed in {@link User}.
+     * @param user the user to login 
+     */
+    public void login(User user) throws UserException {
+        
+        String loginURI = String.join("",
+                apiUri.toString(),
+                "/users/login");
+        
+        HttpHeaders loginHeaders = new HttpHeaders();
+        loginHeaders.set("oopsie-customer-id", customerId.toString());
+        loginHeaders.set("oopsie-site-id", siteId.toString());
+        
+        HttpEntity loginEntity =  new HttpEntity(user, loginHeaders);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity response = null;
+        try {
+            
+            response = restTemplate.exchange(
+                    loginURI,
+                    HttpMethod.POST,
+                    loginEntity,
+                    String.class);
+            
+        } catch(Exception ex) {
+            throw new UserException("Severe: " + ex.getMessage());
+        }
+        
+        List<String> cookies = response.getHeaders().get("Set-Cookie");
+        this.authCookie= cookies.get(0);
+        this.refreshAuthCookie = cookies.get(1);
+    }
+    
+    /**
+     * Logging out current user session.
+     */
+    public void logout() throws StatementExecutionException {
+        String loginURI = String.join("",
+                apiUri.toString(),
+                "/users/logout");
+        
+        HttpHeaders logoutHeaders = new HttpHeaders();
+        logoutHeaders.set("oopsie-customer-id", customerId.toString());
+        logoutHeaders.set("oopsie-site-id", siteId.toString());
+        logoutHeaders.add("Cookie", authCookie);
+        
+        HttpEntity logoutEntity =  new HttpEntity(null, logoutHeaders);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity response = null;
+        try {
+            
+            response = restTemplate.exchange(
+                    loginURI,
+                    HttpMethod.POST,
+                    logoutEntity,
+                    String.class);
+            
+        } catch(Exception ex) {
+            throw new UserException("Severe: " + ex.getMessage());
+        }
+        this.authCookie = null;
+        this.refreshAuthCookie = null;
     }
     
     /**

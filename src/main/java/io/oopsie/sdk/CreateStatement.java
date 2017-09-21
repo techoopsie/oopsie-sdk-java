@@ -8,7 +8,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.springframework.http.HttpHeaders;
+import java.util.UUID;
+import java.util.concurrent.Future;
 import org.springframework.http.HttpMethod;
 
 /**
@@ -97,12 +98,12 @@ public class CreateStatement extends Statement {
     }
     
     @Override
-    protected synchronized final ResultSet execute(URI baseApiUri, HttpHeaders baseHeaders)
+    protected synchronized final ResultSet execute(URI baseApiUri, UUID customerId, UUID siteId, String apiKey, String cookie)
             throws AlreadyExecutedException, StatementExecutionException {
         
         setRequestMethod(HttpMethod.POST);
         setRequestBody(attribVals);
-        return super.execute(baseApiUri, baseHeaders);
+        return super.execute(baseApiUri, customerId, siteId, apiKey, cookie);
     }
 
     /**

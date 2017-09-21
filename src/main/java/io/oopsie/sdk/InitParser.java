@@ -1,6 +1,6 @@
 package io.oopsie.sdk;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -17,7 +17,7 @@ class InitParser {
     private static Applications parseApps(
             Map<String, Map> map) {
         
-        Map<String, Application> parsedAppMap = new HashMap();
+        Map<String, Application> parsedAppMap = new LinkedHashMap();
         
         map.keySet().forEach((String appName) -> {
             Map app = map.get(appName);
@@ -35,7 +35,7 @@ class InitParser {
     
     
     private static Map<String, Resource> parseResources(List<Map> resList) {
-        Map<String, Resource> parsedResources = new HashMap();
+        Map<String, Resource> parsedResources = new LinkedHashMap();
         for(Map resMap : resList) {
 
             UUID id = UUID.fromString((String)resMap.get("id"));
@@ -72,7 +72,7 @@ class InitParser {
     
     private static Map<String, Attribute> parseResourceAttributes(List<Map> attributes) {
         
-        Map<String, Attribute> parsedAttributes = new HashMap();
+        Map<String, Attribute> parsedAttributes = new LinkedHashMap();
         attributes.forEach((Map attribute) -> {
             
                 String idVal = (String)attribute.get("id");
@@ -95,7 +95,7 @@ class InitParser {
     
     private static Map<String, PartitionKey> parseResourcePartitionKeys(List<Map> partitionKeys) {
         
-        Map<String, PartitionKey> parsedPartitionKeys = new HashMap();
+        Map<String, PartitionKey> parsedPartitionKeys = new LinkedHashMap();
         partitionKeys.forEach((Map partitionKey) -> {
             
                 String idVal = (String)partitionKey.get("id");
@@ -117,7 +117,7 @@ class InitParser {
     }
     
     private static Map<String, ClusterKey> parseResourceClusterKeys(List<Map> clusterKeys) {
-        Map<String, ClusterKey> parsedClusterKey = new HashMap();
+        Map<String, ClusterKey> parsedClusterKey = new LinkedHashMap();
         clusterKeys.forEach((Map clusterKey) -> {
             
                 String idVal = (String)clusterKey.get("id");
@@ -142,7 +142,7 @@ class InitParser {
     }
     
     private static Map<String, View> parseResourceViews(List<Map> views) {
-        Map<String, View> parsedViews = new HashMap();
+        Map<String, View> parsedViews = new LinkedHashMap();
         views.forEach((Map view) -> {
             
                 String idVal = (String)view.get("id");
@@ -166,7 +166,7 @@ class InitParser {
     }
     
     private static Map<String, Auth> parseResourceAuths(List<Map> auths) {
-        Map<String, Auth> parsedAuths = new HashMap();
+        Map<String, Auth> parsedAuths = new LinkedHashMap();
         auths.forEach((Map auth) -> {
             
                 UUID id = UUID.fromString((String)auth.get("i"));

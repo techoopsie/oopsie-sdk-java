@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Future;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 
 /**
@@ -50,14 +49,14 @@ public class GetStatement extends Statement {
     }
 
     @Override
-    protected synchronized final ResultSet execute(URI baseApiUri, HttpHeaders baseHeaders)
+    protected synchronized final ResultSet execute(URI baseApiUri, UUID customerId, UUID siteId, String apiKey, String cookie)
             throws AlreadyExecutedException, StatementExecutionException {
         
         Map<String, Object> queryparams = new HashMap();
-        if(entityIds!= null && entityIds.size() == 1) {
-            queryparams.put("eid", entityIds.stream().findFirst());
+        if(entityIds!= null && !entityIds.isEmpty()) {
+            queryparams.put("eid", entityIds.stream().findFirst().get());
         }
-        if(entityIds == null || (entityIds != null && entityIds.size() > 2)) {
+        if(limit > 0) {
             queryparams.put("_limit", limit);
         }
         if(primaryKeyParams != null) {
@@ -69,7 +68,7 @@ public class GetStatement extends Statement {
         setQueryparams(queryparams);
         
         setRequestMethod(HttpMethod.GET);
-        return super.execute(baseApiUri, baseHeaders);
+        return super.execute(baseApiUri, customerId, siteId, apiKey, cookie);
     }
     
     /**
@@ -123,7 +122,9 @@ public class GetStatement extends Statement {
         if(entityId == null) {
             entityIds = null;
         } else {
-            entityIds = Sets.newHashSet(entityId);
+            
+            entityIds = new HashSet();
+            entityIds.add(entityId);
         }
         return this;
     }
@@ -166,8 +167,10 @@ public class GetStatement extends Statement {
             throw new AlreadyExecutedException("Statement already executed.");
         }
         
-        if(!resource.getSettablePrimaryKeyNames().contains(name)) {
-            throw new StatementException("Parameter is not valid in this GET statement."
+        if(!resource.getSettablePrimaryKeyNames().contains(
+                name.substring(0, (name.indexOf("[") !=  -1 ? name.indexOf("[") : name.length() - 1))
+        )) {
+            throw new StatementException("Some params are not valid in this GET statement."
                     + " Only use primary key attributes of current Resource");
         }
         
@@ -194,7 +197,9 @@ public class GetStatement extends Statement {
             throw new AlreadyExecutedException("Statement already executed.");
         }
         
-        if(!params.keySet().stream().allMatch(param -> resource.getSettablePrimaryKeyNames().contains(param))) {
+        if(!params.keySet().stream().allMatch(param -> resource.getSettablePrimaryKeyNames().contains(
+                param.substring(0, (param.indexOf("[") !=  -1 ? param.indexOf("[") : param.length()))
+        ))) {
             throw new StatementException("Some params are not valid in this GET statement."
                     + " Only use primary key attributes of current Resource");
         }

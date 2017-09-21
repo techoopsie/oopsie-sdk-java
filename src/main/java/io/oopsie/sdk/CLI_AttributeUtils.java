@@ -1,8 +1,12 @@
 package io.oopsie.sdk;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.oopsie.sdk.error.ModelException;
+import java.util.Map;
 
-class AttributeUtils {
+class CLI_AttributeUtils {
+    
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     static Object getValueObject(Resource resource, String attributeName, String value) throws ModelException {
         
@@ -18,10 +22,10 @@ class AttributeUtils {
                settable = resource.getPartitionKeys().get(attributeName);
            }
            DataType type = settable.getType();
-           return createValue(type, value);
+           return createValue(attributeName,  value, type);
     }
     
-    private static Object createValue(DataType type, String value) {
+    private static Object createValue(String attributeName, String value, DataType type) {
         Object object = null;
         try {
             switch(type) {
@@ -45,6 +49,9 @@ class AttributeUtils {
                     break;
                 case NUMBER_INTEGER:
                     object = Integer.valueOf(value);
+                    break;
+                case RELATION:
+                    object = mapper.readValue(value, Map.class);
                     break;
                 default:
                     // lazily throwing to be catched ...

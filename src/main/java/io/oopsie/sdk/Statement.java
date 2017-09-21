@@ -5,14 +5,16 @@ import io.oopsie.sdk.error.StatementExecutionException;
 import io.oopsie.sdk.error.NotExecutedException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -85,7 +87,7 @@ public abstract class Statement {
         this.queryparams = queryparams;
     }
     
-    protected ResultSet execute(URI requestBaseApiUri, HttpHeaders baseHeaders)
+    protected ResultSet execute(URI requestBaseApiUri, UUID customerId, UUID siteId, String apiKey, String authCookie)
             throws AlreadyExecutedException, StatementExecutionException {
         
         if(isExecuted()) {
@@ -102,11 +104,21 @@ public abstract class Statement {
         if(queryparams != null && !queryparams.isEmpty()) {
             queryparams.forEach((k,v) -> uriBuilder.queryParam(k, v));
         }
-        URI requestUri = uriBuilder.build().encode().toUri();
+        URI requestUri = uriBuilder.build().encode().toUri();        
         
-        HttpEntity httpEntity =  new HttpEntity(requestBody, baseHeaders);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("oopsie-customer-id", customerId.toString());
+        headers.set("oopsie-site-id", siteId.toString());
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        headers.add("Cookie", authCookie);
+        if(apiKey != null) {
+            headers.set("Authorization", apiKey);
+        }
+        HttpEntity httpEntity =  new HttpEntity(requestBody, headers);
+        
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity response = null;
+        
         try {
             
             response = restTemplate.exchange(
@@ -115,11 +127,13 @@ public abstract class Statement {
                     httpEntity,
                     Object.class);
             
-        } catch(RestClientException ex) {
+            
+        } catch(Exception ex) {
             if(ex instanceof HttpClientErrorException) {
-                throw new StatementExecutionException(((HttpClientErrorException)ex).getResponseBodyAsString());
+                String body = ((HttpClientErrorException)ex).getResponseBodyAsString();
+                throw new StatementExecutionException(((HttpClientErrorException) ex).getMessage() + ", " + body);
             } else {
-                throw ex;
+                throw new StatementExecutionException("Severe: " + ex.getMessage());
             }
         }
         

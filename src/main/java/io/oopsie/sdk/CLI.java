@@ -3,19 +3,24 @@ package io.oopsie.sdk;
 import io.oopsie.sdk.error.CLIParseCommandException;
 import com.google.common.base.Charsets;
 import io.oopsie.sdk.error.ModelException;
+import io.oopsie.sdk.error.OopsieSiteException;
 import io.oopsie.sdk.error.StatementExecutionException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.TreeSet;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -28,6 +33,7 @@ public class CLI {
     private Properties siteInfo;
     private Site site;
     private String last;
+    private boolean truncate;
 
     public CLI() {
         this.terminalInput = new Scanner(System.in, Charsets.UTF_8.toString());
@@ -44,79 +50,108 @@ public class CLI {
         site = new Site( 
                 siteInfo.getProperty("siteUrl"),
                 siteInfo.getProperty("customerId"), 
-                siteInfo.getProperty("siteId"),
-                siteInfo.getProperty("apiKey"));
+                siteInfo.getProperty("siteId"));
         site.init();
         while(true) {
             System.out.print("oopsh> ");
             try {
-                printResult(executeCommand(splitCommand(scanTerminalInput().trim())));
+                Map<String, List<String>> params = splitCommand(scanTerminalInput().trim());
+                if(params != null) {
+                    printResult(executeCommand(params), truncate);
+                }
             } catch(CLIParseCommandException e) {
                 System.out.println(e.getMessage());
             }
         }
     }
     
-    private Map<String, String> splitCommand(String command) throws CLIParseCommandException {
+    private Map<String, List<String>> splitCommand(String command) throws CLIParseCommandException {
               
         String trimmedCommand = command.trim();  
-        Map<String, String> commandMap = new HashMap();
-        Method method = null;
+        Map<String, List<String>> commandMap = new HashMap();
+        CLI_Method method = null;
         try {
 
             // extract head command
-            if(commandStartWith(command, Method.CREATE)) {
-                method = Method.CREATE;
-            } else if(commandStartWith(command, Method.DELETE)) {
-                method = Method.DELETE;
-            } else if(commandStartWith(command, Method.EXIT)) {
-                method = Method.EXIT;
-            } else if(commandStartWith(command, Method.HELP)) {
-                method = Method.HELP;
-            } else if(commandStartWith(command, Method.READ)) {
-                method = Method.READ;
-            } else if(commandStartWith(command, Method.UPDATE)) {
-                method = Method.UPDATE;
+            if(commandStartWith(command, CLI_Method.CREATE)) {
+                method = CLI_Method.CREATE;
+            } else if(commandStartWith(command, CLI_Method.DELETE)) {
+                method = CLI_Method.DELETE;
+            } else if(commandStartWith(command, CLI_Method.EXIT)) {
+                exit();
+            } else if(commandStartWith(command, CLI_Method.HELP)) {
+                method = CLI_Method.HELP;
+            } else if(commandStartWith(command, CLI_Method.LOGIN)) {
+                login();
+                return null;
+            } else if(commandStartWith(command, CLI_Method.LOGOUT)) {
+                logout();
+                return null;
+            } else if(commandStartWith(command, CLI_Method.KEY)) {
+                setApiKey(true);
+                return null;
+            } else if(commandStartWith(command, CLI_Method.NOKEY)) {
+                setApiKey(false);
+                return null;
+            } else if(commandStartWith(command, CLI_Method.READ)) {
+                method = CLI_Method.READ;
+            } else if(commandStartWith(command, CLI_Method.UPDATE)) {
+                method = CLI_Method.UPDATE;
+            } else if(commandStartWith(command, CLI_Method.SET)) {
+                set(command);
+                System.out.println("TRUNCATE RESULT=" + truncate);
+                return null;
             } else {
                 throw new CLIParseCommandException("Statement is not an oopsh command.");
             }
             trimmedCommand = trimmedCommand.substring(method.name().length() + 1).trim();
             // extract app and resource
             String[] target = extractTarget(trimmedCommand);
-            commandMap.put("method", method.name());
-            commandMap.put("app", target[0]);
-            commandMap.put("res", target[1]);
+            
+            commandMap.put("@method", asList(method.name()));
+            commandMap.put("@app", asList(target[0]));
+            commandMap.put("@res", asList(target[1]));
 
             trimmedCommand = trimmedCommand.substring(target[0].length() + 1).trim();
-            trimmedCommand = trimmedCommand.substring(target[1].length() + 1).trim();
+            trimmedCommand = trimmedCommand.substring(target[1].length()).trim();
         } catch(StringIndexOutOfBoundsException e) {
             throw new CLIParseCommandException("Can't execute command, insufficient information.");
         }
-        
-        switch(method) {
-            case CREATE:
-                commandMap.putAll(splitCreateParams(trimmedCommand));
-                break;
-        }
+        commandMap.putAll(splitParams(trimmedCommand));
         return commandMap;
     }
     
-    private Map<String, String> splitCreateParams(String paramsString) {
+    private List<String> asList(String string) {
+        List<String> list = new ArrayList();
+        list.add(string);
+        return list;
+    }
+    
+    private Map<String, List<String>> splitParams(String paramsString) {
         String trimmedParams = paramsString.trim();
         List<String> paramsList = Arrays.asList(trimmedParams.split("@:"));
-        Map<String, String> params = new HashMap();
+        Map<String, List<String>> params = new HashMap();
+        
         paramsList.forEach(p -> {
+            
             if(p.length() > 0 && p.contains("=")) {
+                
+                 // Can't use split since string after '=' may contain additional '=' in value
                 String param = p.trim();
                 String paramAttrib = param.substring(0, param.indexOf("="));
                 String paramVal = param.substring(param.indexOf("=") + 1);
-                params.put(paramAttrib, paramVal);
+                List<String> valList = params.get(paramAttrib);
+                if(valList == null) {
+                    valList = new ArrayList();
+                    params.put(paramAttrib, valList);
+                }
+                valList.add(paramVal);
             }
         });
         return params;
     }
     
-    private boolean commandStartWith(String commandString, Method command) {
+    private boolean commandStartWith(String commandString, CLI_Method command) {
         return commandString.trim().toUpperCase().startsWith(command.name());
     }
     
@@ -127,11 +162,11 @@ public class CLI {
         return target;
     } 
     
-    private ResultSet executeCommand(Map<String, String> commandMap) throws CLIParseCommandException {
+    private ResultSet executeCommand(Map<String, List<String>> commandMap) throws CLIParseCommandException {
         
-        Method head = Method.valueOf(commandMap.remove("method"));
-        String appS = commandMap.remove("app");
-        String resS = commandMap.remove("res");
+        CLI_Method method = CLI_Method.valueOf(commandMap.remove("@method").get(0));
+        String appS = commandMap.remove("@app").get(0);
+        String resS = commandMap.remove("@res").get(0);
         
         Application app;
         try {
@@ -148,7 +183,7 @@ public class CLI {
         }
         
         Statement statement = null;
-        switch(head) {
+        switch(method) {
             case HELP:
                 help();
                 break;
@@ -156,15 +191,17 @@ public class CLI {
                 statement = createStatement(resource, commandMap);
                 break;
             case READ:
+                statement = readStatement(resource, commandMap);
+                break;
             case UPDATE:
             case DELETE:
-                System.out.println("'" + commandMap.get("method") + "' is not yet supported");
+                System.out.println("'" + method + "' is not yet supported");
                 break;
             case EXIT:
                 exit();
                 break;
             default:
-                System.out.println("'" + commandMap.get("method") + "' is not a recognized command");
+                System.out.println("'" + method + "' is not a recognized command");
                 break;
         }
         ResultSet result = null;
@@ -176,99 +213,148 @@ public class CLI {
         return result;
     }
     
-    private CreateStatement createStatement(Resource resource, Map<String, String> attribMap) throws CLIParseCommandException {
+    private CreateStatement createStatement(Resource resource, Map<String, List<String>> attribMap) throws CLIParseCommandException {
         
-        CreateStatement statement = null;
-        if(attribMap.isEmpty()) {
-            statement = resource.create();
-        } else {
-            // the rest should be attribs mapped to their values
-            Map<String, Object> attribVals = new HashMap();
-            
-            
-            for(String k : attribMap.keySet()) {
-                Object objectVal;
-                try {
-                    objectVal = AttributeUtils.getValueObject(resource, k, attribMap.get(k));
-                } catch(IllegalArgumentException | ModelException e) {
-                    throw new CLIParseCommandException(e.getMessage());
-                }
-                attribVals.put(k, objectVal);
-            }
-            statement = resource.create().withParams(attribVals);
+        CreateStatement statement = resource.create();
+        
+        if(!attribMap.isEmpty()) {
+            attribMap.forEach((a,v) -> {
+                 // use first appearance of attrib ...
+                Object o = CLI_AttributeUtils.getValueObject(resource, a, v.get(0));
+                statement.withParam(a, o);
+            });
         }
         
         return statement;
     }
     
-    private GetStatement parseRead(String command, Deque<String> commandTokens) throws CLIParseCommandException {
-        
-        // next poll must application name
-        String next = commandTokens.poll();
-        Application app;
+    private GetStatement readStatement(Resource resource, Map<String, List<String>> paramMap) throws CLIParseCommandException {
+        final GetStatement statement = resource.get();
         try {
-            app = site.getApplication(next);
-        } catch(ModelException e) {
-            throw new CLIParseCommandException("Application '" + next + "' could not be found.");
-        }
-        
-        // next poll must resource name
-        next = commandTokens.poll();
-        Resource resource;
-        try {
-            resource = app.getResource(next);
-        } catch(ModelException e) {
-            throw new CLIParseCommandException("Resource '" + next + "' could not be found.");
-        }
-        
-        GetStatement statement = null;
-        if(commandTokens.isEmpty()) {
-            statement = resource.get();
-        } else {
-            Map<String, Object> attribVals = new HashMap();
-            while(!commandTokens.isEmpty()) {
-                String[] attrib = commandTokens.poll().split("=");
-                if(attrib.length < 2) {
-                    throw new CLIParseCommandException("Attribute parameter '" +  attrib[0] + "' is not valid, must conform to format '<name>=<value>'");
+            
+            if(!paramMap.isEmpty()) {
+
+                // only get first limit
+                int limit = paramMap.get(CLI_ReadParams.LIMIT.command()) != null ?
+                        Integer.valueOf(paramMap.remove(CLI_ReadParams.LIMIT.command()).get(0)) : 0;
+                if(limit > 0) {
+                    statement.limit(limit);
                 }
-                Object objectVal;
-                try {
-                    objectVal = AttributeUtils.getValueObject(resource, attrib[0], attrib[1]);
-                } catch(IllegalArgumentException | ModelException e) {
-                    throw new CLIParseCommandException(e.getMessage());
+                
+                // only get first expand
+                boolean expand = paramMap.get(CLI_ReadParams.EXPAND.command()) != null ?
+                        Boolean.valueOf(paramMap.remove(CLI_ReadParams.EXPAND.command()).get(0)) : false;
+                if(expand) {
+                    statement.expandRelations();
                 }
-                attribVals.put(attrib[0], objectVal);
+                
+                // for now only support and get first id
+                UUID id = paramMap.get(CLI_ReadParams.ID.command()) != null ?
+                        UUID.fromString(paramMap.remove(CLI_ReadParams.ID.command()).get(0)) : null;
+                if(id != null) {
+                    statement.withId(id);
+                }
+                
+                // last param supported in read is pk's, ... ignoring rest if any ...
+                List<String> pks = paramMap.remove(CLI_ReadParams.PK.command());
+                
+                if(pks != null) {
+                    pks.forEach(pk -> {
+                            String pkParam = pk.substring(0, pk.indexOf("="));
+                            String pkVal = pk.substring(pk.indexOf("=") + 1);
+                            statement.withParam(pkParam, pkVal);
+                        });
+                }
             }
-            statement = resource.get().withParams(attribVals);
+        } catch(Exception e) {
+            if(e instanceof CLIParseCommandException) {
+                throw e;
+            } else if(e instanceof OopsieSiteException) {
+                throw  new CLIParseCommandException(e.getMessage());
+            } else {
+                throw new CLIParseCommandException("Can't execute command.");
+            }
         }
         
         return statement;
     }
     
-    /**
-     * Polling commandTokens until next is not space.
-     * @param commandTokens 
-     * @return last poll that is not space
-     */
-    private String ignoreSpace(Deque<String> commandTokens) {
-        
-        String next = null;
-        while(true) {
-            next = commandTokens.poll();
-            if(!next.equals(" ")) {
-                break;
-            }
+    private void login() {
+        try {
+            User user = new User(siteInfo.getProperty("username"), siteInfo.getProperty("password"));
+            site.login(user);
+            System.out.println("Logged in as " + user.getEmail());
+        } catch(Exception e) {
+            System.out.println(e.getMessage());
         }
-        return next;
-     }
+    }
+    
+    private void logout() {
+        try {
+            site.logout();
+        } catch(Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    
+    private void setApiKey(boolean use) {
+        
+        String key = use ? siteInfo.getProperty("apiKey") : null;
+        site.setApiKey(key);
+        site.init();
+        System.out.println("Using api key: " + use);
+    }
     
     private void help() {
         System.out.println("Printing help!");
     }
     
     private void exit() {
-        System.out.println("Goodbye!");
+        System.out.println("Shutting down site ... ");
+        site.close(30, TimeUnit.SECONDS);
+        System.out.println(" ... done!");
         System.exit(0);
+    }
+    
+    private void set(String command) throws CLIParseCommandException {
+        
+        try {
+            Deque<String> deque = new ArrayDeque(Arrays.asList(command.split(" ")));
+            skipToNext(deque); // << not using since we know first is SET
+            String next = skipToNext(deque);
+            CLI_SetParams param = null;
+
+                param = CLI_SetParams.valueOf(next.toUpperCase());
+
+            switch(param) {
+                case TR:
+                case TRUNCATE:
+                    next = skipToNext(deque); // next shoul be a bool string
+                    truncate = Boolean. valueOf(next.toLowerCase());
+                    break;
+                case APP:
+                case APPLICATION:
+                    break;
+                case RES:
+                case RESOURCE:
+                    break;
+            }
+        } catch(Exception e) {
+            throw new CLIParseCommandException("Can't execute command.");
+        }
+    }
+    
+    private String skipToNext(Deque<String> deque) {
+        
+        String next = null;
+        while(true) {
+            String s = deque.poll();
+            if(!s.isEmpty()) {
+                next = s;
+                break;
+            }
+        }
+        return next;
     }
     
     private String scanTerminalInput() {
@@ -287,7 +373,59 @@ public class CLI {
         return command;
     }
 
-    private void printResult(ResultSet result) {
+    private void printResult(ResultSet result, boolean truncate) {
+        if(truncate) {
+            printResultTruncated(result);
+        } else {
+            printResultFull(result);
+        }
+    }
+    
+    private void printResultFull(ResultSet result) {
+        
+        Resource res = result.getStatement().getResource();
+        int colSpace = 0;
+        for(String a : res.getAllSettableAttributeNames()) {
+            if(a.length() > colSpace) {
+                colSpace = a.length();
+            }
+        }
+        colSpace += 10;
+        
+        Iterator<Row> iterator = result.iterator();
+        int c = 0;
+        System.out.println("--------------------------------------------------");
+        while(iterator.hasNext()) {
+            Row row = iterator.next();
+            
+            String pkVals = "";
+            for(String pkName : res.getPrimaryKeyNames()) {
+                pkVals = String.join("",
+                        "\"",
+                        pkName,
+                        "\"",
+                        ":",
+                        "\"",
+                        row.get(pkName).toString(),
+                        "\""
+                );
+            }
+            String pk = String.join("", "{", pkVals,"}");
+            System.out.println("| ROW " + ++c + ", PK " + pk);
+            System.out.println("|");
+            System.out.println(padOrTrunc("| eid:", colSpace - "| eid:".length()) + row.get("eid"));
+            System.out.println(padOrTrunc("| cra:", colSpace - "| cra:".length()) + row.get("cra"));
+            System.out.println(padOrTrunc("| crb:", colSpace - "| crb:".length()) + row.get("crb"));
+            System.out.println(padOrTrunc("| cha:", colSpace - "| cha:".length()) + row.get("cha"));
+            System.out.println(padOrTrunc("| chb:", colSpace - "| chb:".length()) + row.get("chb"));
+            for(String a : res.getAllSettableAttributeNames()) {
+                System.out.println( padOrTrunc("| " + a + ":", colSpace - ("| " + a + ":").length()) + row.get(a));
+            }
+            System.out.println("--------------------------------------------------");
+        }
+    }
+    
+    private void printResultTruncated(ResultSet result) {
         int colLenght = 20;
         TreeSet<String> treeSet = new TreeSet(result.getStatement().getResource().getAllSettableAttributeNames());
         
