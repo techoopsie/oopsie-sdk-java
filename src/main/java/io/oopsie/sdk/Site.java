@@ -26,6 +26,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+/**
+ * An instance of this class is the link between the client and the OOPSIE Cloud Site.
+ * For the site object to connect call the {@link #init()} method.
+ */
 public class Site {
     
     private static final String URI_API_VERSION = "/api/v1";

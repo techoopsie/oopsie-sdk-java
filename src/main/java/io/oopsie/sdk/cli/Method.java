@@ -1,6 +1,6 @@
-package io.oopsie.sdk;
+package io.oopsie.sdk.cli;
 
-public enum CLI_Method {
+public enum Method {
     
     HELP,
     EXIT,

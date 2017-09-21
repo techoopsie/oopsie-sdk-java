@@ -34,10 +34,19 @@ public class Resource {
         this.auths = auths;
     }
 
-    final UUID getResourceId() {
+    
+    /**
+     * Returns the resource id.
+     * @return a id
+     */
+    public final UUID getResourceId() {
         return resourceId;
     }
 
+    /**
+     * Returns the resource name.
+     * @return a name
+     */
     public final String getName() {
         return name;
     }
@@ -118,9 +127,10 @@ public class Resource {
     }
     
     /**
-     * Must be default package access for now!
+     * Returns all regular attributes.
+     * @return regular attributes
      */
-    Map<String, Attribute> getAttributes() {
+    public final Map<String, Attribute> getRegularAttributes() {
         return Collections.unmodifiableMap(attributes);
     }
 
@@ -135,9 +145,10 @@ public class Resource {
     }
     
     /**
-     * Must be default package access for now!
+     * Returns all Partition keys.
+     * @return partition keys.
      */
-    Map<String, PartitionKey> getPartitionKeys() {
+    public final Map<String, PartitionKey> getPartitionKeys() {
         return Collections.unmodifiableMap(partitionKeys);
     }
 
@@ -152,9 +163,10 @@ public class Resource {
     }
     
     /**
-     * Must be default package access for now!
+     * Returns the cluster keys.
+     * @return cluster keys
      */
-    Map<String, ClusterKey> getClusterKeys() {
+    public Map<String, ClusterKey> getClusterKeys() {
         return Collections.unmodifiableMap(clusterKeys);
     }
 

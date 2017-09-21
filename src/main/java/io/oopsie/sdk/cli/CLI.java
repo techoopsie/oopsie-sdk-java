@@ -1,7 +1,17 @@
-package io.oopsie.sdk;
+package io.oopsie.sdk.cli;
 
 import io.oopsie.sdk.error.CLIParseCommandException;
 import com.google.common.base.Charsets;
+import io.oopsie.sdk.Application;
+import io.oopsie.sdk.CreateStatement;
+import io.oopsie.sdk.DataType;
+import io.oopsie.sdk.GetStatement;
+import io.oopsie.sdk.Resource;
+import io.oopsie.sdk.ResultSet;
+import io.oopsie.sdk.Row;
+import io.oopsie.sdk.Site;
+import io.oopsie.sdk.Statement;
+import io.oopsie.sdk.User;
 import io.oopsie.sdk.error.ModelException;
 import io.oopsie.sdk.error.OopsieSiteException;
 import io.oopsie.sdk.error.StatementExecutionException;
@@ -69,35 +79,35 @@ public class CLI {
               
         String trimmedCommand = command.trim();  
         Map<String, List<String>> commandMap = new HashMap();
-        CLI_Method method = null;
+        Method method = null;
         try {
 
             // extract head command
-            if(commandStartWith(command, CLI_Method.CREATE)) {
-                method = CLI_Method.CREATE;
-            } else if(commandStartWith(command, CLI_Method.DELETE)) {
-                method = CLI_Method.DELETE;
-            } else if(commandStartWith(command, CLI_Method.EXIT)) {
+            if(commandStartWith(command, Method.CREATE)) {
+                method = Method.CREATE;
+            } else if(commandStartWith(command, Method.DELETE)) {
+                method = Method.DELETE;
+            } else if(commandStartWith(command, Method.EXIT)) {
                 exit();
-            } else if(commandStartWith(command, CLI_Method.HELP)) {
-                method = CLI_Method.HELP;
-            } else if(commandStartWith(command, CLI_Method.LOGIN)) {
+            } else if(commandStartWith(command, Method.HELP)) {
+                method = Method.HELP;
+            } else if(commandStartWith(command, Method.LOGIN)) {
                 login();
                 return null;
-            } else if(commandStartWith(command, CLI_Method.LOGOUT)) {
+            } else if(commandStartWith(command, Method.LOGOUT)) {
                 logout();
                 return null;
-            } else if(commandStartWith(command, CLI_Method.KEY)) {
+            } else if(commandStartWith(command, Method.KEY)) {
                 setApiKey(true);
                 return null;
-            } else if(commandStartWith(command, CLI_Method.NOKEY)) {
+            } else if(commandStartWith(command, Method.NOKEY)) {
                 setApiKey(false);
                 return null;
-            } else if(commandStartWith(command, CLI_Method.READ)) {
-                method = CLI_Method.READ;
-            } else if(commandStartWith(command, CLI_Method.UPDATE)) {
-                method = CLI_Method.UPDATE;
-            } else if(commandStartWith(command, CLI_Method.SET)) {
+            } else if(commandStartWith(command, Method.READ)) {
+                method = Method.READ;
+            } else if(commandStartWith(command, Method.UPDATE)) {
+                method = Method.UPDATE;
+            } else if(commandStartWith(command, Method.SET)) {
                 set(command);
                 System.out.println("TRUNCATE RESULT=" + truncate);
                 return null;
@@ -151,7 +161,7 @@ public class CLI {
         return params;
     }
     
-    private boolean commandStartWith(String commandString, CLI_Method command) {
+    private boolean commandStartWith(String commandString, Method command) {
         return commandString.trim().toUpperCase().startsWith(command.name());
     }
     
@@ -164,7 +174,7 @@ public class CLI {
     
     private ResultSet executeCommand(Map<String, List<String>> commandMap) throws CLIParseCommandException {
         
-        CLI_Method method = CLI_Method.valueOf(commandMap.remove("@method").get(0));
+        Method method = Method.valueOf(commandMap.remove("@method").get(0));
         String appS = commandMap.remove("@app").get(0);
         String resS = commandMap.remove("@res").get(0);
         
@@ -220,7 +230,7 @@ public class CLI {
         if(!attribMap.isEmpty()) {
             attribMap.forEach((a,v) -> {
                  // use first appearance of attrib ...
-                Object o = CLI_AttributeUtils.getValueObject(resource, a, v.get(0));
+                Object o = AttributeUtils.getValueObject(resource, a, v.get(0));
                 statement.withParam(a, o);
             });
         }
@@ -235,28 +245,28 @@ public class CLI {
             if(!paramMap.isEmpty()) {
 
                 // only get first limit
-                int limit = paramMap.get(CLI_ReadParams.LIMIT.command()) != null ?
-                        Integer.valueOf(paramMap.remove(CLI_ReadParams.LIMIT.command()).get(0)) : 0;
+                int limit = paramMap.get(ReadParams.LIMIT.command()) != null ?
+                        Integer.valueOf(paramMap.remove(ReadParams.LIMIT.command()).get(0)) : 0;
                 if(limit > 0) {
                     statement.limit(limit);
                 }
                 
                 // only get first expand
-                boolean expand = paramMap.get(CLI_ReadParams.EXPAND.command()) != null ?
-                        Boolean.valueOf(paramMap.remove(CLI_ReadParams.EXPAND.command()).get(0)) : false;
+                boolean expand = paramMap.get(ReadParams.EXPAND.command()) != null ?
+                        Boolean.valueOf(paramMap.remove(ReadParams.EXPAND.command()).get(0)) : false;
                 if(expand) {
                     statement.expandRelations();
                 }
                 
                 // for now only support and get first id
-                UUID id = paramMap.get(CLI_ReadParams.ID.command()) != null ?
-                        UUID.fromString(paramMap.remove(CLI_ReadParams.ID.command()).get(0)) : null;
+                UUID id = paramMap.get(ReadParams.ID.command()) != null ?
+                        UUID.fromString(paramMap.remove(ReadParams.ID.command()).get(0)) : null;
                 if(id != null) {
                     statement.withId(id);
                 }
                 
                 // last param supported in read is pk's, ... ignoring rest if any ...
-                List<String> pks = paramMap.remove(CLI_ReadParams.PK.command());
+                List<String> pks = paramMap.remove(ReadParams.PK.command());
                 
                 if(pks != null) {
                     pks.forEach(pk -> {
@@ -322,9 +332,9 @@ public class CLI {
             Deque<String> deque = new ArrayDeque(Arrays.asList(command.split(" ")));
             skipToNext(deque); // << not using since we know first is SET
             String next = skipToNext(deque);
-            CLI_SetParams param = null;
+            SetParams param = null;
 
-                param = CLI_SetParams.valueOf(next.toUpperCase());
+                param = SetParams.valueOf(next.toUpperCase());
 
             switch(param) {
                 case TR:
@@ -418,8 +428,11 @@ public class CLI {
             System.out.println(padOrTrunc("| crb:", colSpace - "| crb:".length()) + row.get("crb"));
             System.out.println(padOrTrunc("| cha:", colSpace - "| cha:".length()) + row.get("cha"));
             System.out.println(padOrTrunc("| chb:", colSpace - "| chb:".length()) + row.get("chb"));
-            for(String a : res.getAllSettableAttributeNames()) {
+            for(String a : res.getRegularAttributes().keySet()) {
                 System.out.println( padOrTrunc("| " + a + ":", colSpace - ("| " + a + ":").length()) + row.get(a));
+                if(res.getRegularAttributes().get(a).getType().equals(DataType.RELATION)) {
+                    System.out.println( padOrTrunc("| " + a + "_data:", colSpace - ("| " + a + "_data:").length()) + row.get(a + "_data"));
+                }
             }
             System.out.println("--------------------------------------------------");
         }

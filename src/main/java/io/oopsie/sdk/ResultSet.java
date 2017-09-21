@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Holds information for an executed {@link Statement}.
+ * Holds information ({@link Row}s) for an executed {@link Statement}.
  * 
  * Note, instances of this class are not thread safe.
  * 

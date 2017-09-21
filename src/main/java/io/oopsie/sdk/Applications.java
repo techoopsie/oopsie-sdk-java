@@ -3,7 +3,7 @@ package io.oopsie.sdk;
 import io.oopsie.sdk.error.ModelException;
 import java.util.Map;
 
-class Applications {
+public class Applications {
     
     private final Map<String, Application> applications;
 
@@ -11,7 +11,13 @@ class Applications {
         this.applications = applications;
     }
     
-    final Application getApplication(String name) throws ModelException {
+    /**
+     * Returns the named {@link Application}.
+     * @param name
+     * @return an application
+     * @throws ModelException 
+     */
+    public final Application getApplication(String name) throws ModelException {
         if(!applications.containsKey(name)) {
             throw new ModelException("'" + name + "' not part of this site model.");
         }

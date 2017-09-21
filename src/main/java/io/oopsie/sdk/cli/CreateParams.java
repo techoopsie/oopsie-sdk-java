@@ -1,12 +1,12 @@
-package io.oopsie.sdk;
+package io.oopsie.sdk.cli;
 
-public enum CLI_CreateParams {
+public enum CreateParams {
     
     ATTRIB("@:");
     
     private String command;
 
-    private CLI_CreateParams(String command) {
+    private CreateParams(String command) {
         this.command = command;
     }
 

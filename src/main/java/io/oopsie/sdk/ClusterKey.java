@@ -2,7 +2,7 @@ package io.oopsie.sdk;
 
 import java.util.UUID;
 
-class ClusterKey implements SettableAttribute {
+public class ClusterKey implements SettableAttribute {
     
     private final UUID id;
     private final String name;
@@ -18,23 +18,43 @@ class ClusterKey implements SettableAttribute {
         this.orderBy = orderBy;
     }
 
-    final UUID getId() {
+    /**
+     * Returns the id of the cluster key
+     * @return an id
+     */
+    public final UUID getId() {
         return id;
     }
 
-    final String getName() {
+    /**
+     * Returns the name of the cluster key
+     * @return a anme
+     */
+    public final String getName() {
         return name;
     }
 
-    final UUID getRelationId() {
+    /**
+     * Returns the relation id of the cluster key
+     * @return a relation id
+     */
+    public final UUID getRelationId() {
         return relationId;
     }
 
+    /**
+     * Returns the type of the cluster key
+     * @return a type
+     */
     public DataType getType() {
         return type;
     }
 
-    OrderBy getOrderBy() {
+    /**
+     * Returns the order by of the cluster key
+     * @return an order by
+     */
+    public OrderBy getOrderBy() {
         return orderBy;
     }
 }

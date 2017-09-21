@@ -1,6 +1,6 @@
-package io.oopsie.sdk;
+package io.oopsie.sdk.cli;
 
-public enum CLI_ReadParams {
+public enum ReadParams {
     
     RESOURCE("--resource="),
     ID("--id="),
@@ -11,11 +11,11 @@ public enum CLI_ReadParams {
     private String command;
     private String queryParam;
 
-    private CLI_ReadParams(String command) {
+    private ReadParams(String command) {
         this.command = command;
     }
 
-    private CLI_ReadParams(String command, String param) {
+    private ReadParams(String command, String param) {
         this(command);
         this.queryParam = param;
     }

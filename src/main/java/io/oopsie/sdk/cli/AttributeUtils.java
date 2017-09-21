@@ -1,10 +1,13 @@
-package io.oopsie.sdk;
+package io.oopsie.sdk.cli;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.oopsie.sdk.DataType;
+import io.oopsie.sdk.Resource;
+import io.oopsie.sdk.SettableAttribute;
 import io.oopsie.sdk.error.ModelException;
 import java.util.Map;
 
-class CLI_AttributeUtils {
+class AttributeUtils {
     
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -14,7 +17,7 @@ class CLI_AttributeUtils {
                throw new ModelException("Attribute name '" + attributeName + "' is not part of this model.");
            }
            
-           SettableAttribute settable = resource.getAttributes().get(attributeName);
+           SettableAttribute settable = resource.getRegularAttributes().get(attributeName);
            if(settable == null) {
                settable = resource.getClusterKeys().get(attributeName);
            }

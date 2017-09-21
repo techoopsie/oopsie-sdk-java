@@ -2,7 +2,7 @@ package io.oopsie.sdk;
 
 import java.util.UUID;
 
-class Attribute implements SettableAttribute {
+public class Attribute implements SettableAttribute {
     
     private final UUID id;
     private final String name;
@@ -16,18 +16,19 @@ class Attribute implements SettableAttribute {
         this.type = type;
     }
 
-    final UUID getId() {
+    public final UUID getId() {
         return id;
     }
 
-    final String getName() {
+    public final String getName() {
         return name;
     }
 
-    final UUID getRelationId() {
+    public final UUID getRelationId() {
         return relationId;
     }
 
+    @Override
     public DataType getType() {
         return type;
     }

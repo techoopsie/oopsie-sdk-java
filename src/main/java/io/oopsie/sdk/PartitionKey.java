@@ -2,7 +2,7 @@ package io.oopsie.sdk;
 
 import java.util.UUID;
 
-class PartitionKey implements SettableAttribute {
+public class PartitionKey implements SettableAttribute {
     
     private final UUID id;
     private final String name;
@@ -16,18 +16,34 @@ class PartitionKey implements SettableAttribute {
         this.type = type;
     }
 
-    final UUID getId() {
+    /**
+     * Returns the partition key's id.
+     * @return an id
+     */
+    public final UUID getId() {
         return id;
     }
 
-    final String getName() {
+    /**
+     * Returns the partition key's name.
+     * @return a name
+     */
+    public final String getName() {
         return name;
     }
 
-    final UUID getRelationId() {
+    /**
+     * Returns the partition key's relation id.
+     * @return a relation id
+     */
+    public final UUID getRelationId() {
         return relationId;
     }
 
+    /**
+     * Returns the partition key's type.
+     * @return a type
+     */
     public DataType getType() {
         return type;
     }

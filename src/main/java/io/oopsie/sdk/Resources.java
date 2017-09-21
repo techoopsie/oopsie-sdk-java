@@ -3,7 +3,7 @@ package io.oopsie.sdk;
 import io.oopsie.sdk.error.ModelException;
 import java.util.Map;
 
-class Resources {
+public class Resources {
     
     private final Map<String, Resource> resources;
 
@@ -11,7 +11,11 @@ class Resources {
         this.resources = resources;
     }
     
-    final Resource getResource(String name) throws ModelException {
+    /**
+     * Returns a named resource..
+     * @return a resource
+     */
+    public final Resource getResource(String name) throws ModelException {
         if(!resources.containsKey(name)) {
             throw new ModelException("'" + name + "' not part of this site model.");
         }

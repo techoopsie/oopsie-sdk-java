@@ -3,7 +3,7 @@ package io.oopsie.sdk;
 import java.util.Map;
 import java.util.UUID;
 
-class View {
+public class View {
     
     private final UUID id;
     private final String name;
@@ -18,19 +18,35 @@ class View {
         this.clusterKeys = clusterKeys;
     }
 
-    final UUID getId() {
+    /**
+     * Returns the id of the view.
+     * @return the id
+     */
+    public final UUID getId() {
         return id;
     }
 
-    final String getName() {
+    /**
+     * Returns the name of the view.
+     * @return the name
+     */
+    public final String getName() {
         return name;
     }
 
-    final Map<String, PartitionKey> getPartitionKeys() {
+    /**
+     * Returns the partition keys of the view.
+     * @return partition keys
+     */
+    public final Map<String, PartitionKey> getPartitionKeys() {
         return partitionKeys;
     }
 
-    final Map<String, ClusterKey> getClusterKeys() {
+    /**
+     * Returns the cluster keys of the view.
+     * @return the cluster keys
+     */
+    public final Map<String, ClusterKey> getClusterKeys() {
         return clusterKeys;
     }
 

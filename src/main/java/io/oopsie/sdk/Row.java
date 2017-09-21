@@ -7,6 +7,9 @@ import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Holds information for a {@link Resource} entity.
+ */
 public class Row {
     
     private static final SimpleDateFormat timestampFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");

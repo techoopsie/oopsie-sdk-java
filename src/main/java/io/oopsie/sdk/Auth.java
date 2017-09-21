@@ -2,8 +2,7 @@ package io.oopsie.sdk;
 
 import java.util.UUID;
 
-
-class Auth {
+public class Auth {
     
     private final UUID id;
     private final String name;
@@ -15,15 +14,27 @@ class Auth {
         this.permission = permission;
     }
 
-    final UUID getId() {
+    /**
+     * Returns the auth id
+     * @return  an id
+     */
+    public final UUID getId() {
         return id;
     }
 
-    final String getName() {
+    /**
+     * Returns the name of the auth.
+     * @return an auth name
+     */
+    public final String getName() {
         return name;
     }
 
-    final Permission getPermission() {
+    /**
+     * Returns the auth permission.
+     * @return a permission.
+     */
+    public final Permission getPermission() {
         return permission;
     }
 }

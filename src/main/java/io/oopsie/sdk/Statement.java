@@ -173,7 +173,7 @@ public abstract class Statement {
      * Returns the target resource.
      * @return {@link Resource}
      */
-    Resource getResource() {
+    public Resource getResource() {
         return resource;
     }
 }
