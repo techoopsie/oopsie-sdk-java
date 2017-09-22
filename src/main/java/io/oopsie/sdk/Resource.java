@@ -10,7 +10,7 @@ public class Resource {
 
     private final UUID resourceId;
     private final String name;
-    private final Map<String, Attribute> attributes;
+    private final Map<String, RegularAttribute> attributes;
     private final Map<String, PartitionKey> partitionKeys;
     private final Map<String, ClusterKey> clusterKeys;
     private final Map<String, View> views;
@@ -19,7 +19,7 @@ public class Resource {
     Resource(
             UUID resourceId,
             String name,
-            Map<String, Attribute> attributes,
+            Map<String, RegularAttribute> attributes,
             Map<String, PartitionKey> partitionKeys,
             Map<String, ClusterKey> clusterKeys,
             Map<String, View> views,
@@ -130,7 +130,7 @@ public class Resource {
      * Returns all regular attributes.
      * @return regular attributes
      */
-    public final Map<String, Attribute> getRegularAttributes() {
+    public final Map<String, RegularAttribute> getRegularAttributes() {
         return Collections.unmodifiableMap(attributes);
     }
 
@@ -186,6 +186,26 @@ public class Resource {
      */
     public final Set<String> getAuthNames() {
         return Collections.unmodifiableSet(auths.keySet());
+    }
+    
+    /**
+     * Returns the attribute with passed name.
+     * @param name the name of the attribute.
+     * @return the attribute or null
+     */
+    public Attribute getAttribute(String name) {
+        
+        Attribute attrib = this.attributes.get(name);
+        if(attrib != null) {
+            return attrib;
+        }
+        
+        attrib = clusterKeys.get(name);
+        if(attrib != null) {
+            return attrib;
+        }
+        
+        return this.partitionKeys.get(name);
     }
 
     /**

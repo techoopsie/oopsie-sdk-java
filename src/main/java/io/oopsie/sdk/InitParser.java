@@ -41,7 +41,7 @@ class InitParser {
             UUID id = UUID.fromString((String)resMap.get("id"));
             String name = (String)resMap.get("name");
             
-            Map<String, Attribute> attributes = parseResourceAttributes(
+            Map<String, RegularAttribute> attributes = parseResourceAttributes(
                     (List)resMap.get("attributes")
             );
             Map<String, PartitionKey> partitionKeys = parseResourcePartitionKeys(
@@ -70,9 +70,9 @@ class InitParser {
         return parsedResources;
     }
     
-    private static Map<String, Attribute> parseResourceAttributes(List<Map> attributes) {
+    private static Map<String, RegularAttribute> parseResourceAttributes(List<Map> attributes) {
         
-        Map<String, Attribute> parsedAttributes = new LinkedHashMap();
+        Map<String, RegularAttribute> parsedAttributes = new LinkedHashMap();
         attributes.forEach((Map attribute) -> {
             
                 String idVal = (String)attribute.get("id");
@@ -87,7 +87,7 @@ class InitParser {
                 
                 parsedAttributes.put(
                         name,
-                        new Attribute(id, name, relationId, type)
+                        new RegularAttribute(id, name, relationId, type)
                     );
         });
         return parsedAttributes;

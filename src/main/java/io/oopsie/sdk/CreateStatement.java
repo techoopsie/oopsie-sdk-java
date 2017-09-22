@@ -21,15 +21,6 @@ import org.springframework.http.HttpMethod;
 public class CreateStatement extends Statement {
 
     private Map<String, Object> attribVals = new HashMap();
-    private static final Set<String> RESERVED_ATTRIBUTE_NAMES = new HashSet();
-    static {
-        RESERVED_ATTRIBUTE_NAMES.add("cid");
-        RESERVED_ATTRIBUTE_NAMES.add("eid");
-        RESERVED_ATTRIBUTE_NAMES.add("cra");
-        RESERVED_ATTRIBUTE_NAMES.add("crb");
-        RESERVED_ATTRIBUTE_NAMES.add("cha");
-        RESERVED_ATTRIBUTE_NAMES.add("chb");
-    }
 
     /**
      * Used internally to initialize a {@link CreateStatement} for a {@link Resource}.
@@ -60,7 +51,7 @@ public class CreateStatement extends Statement {
             throw new AlreadyExecutedException("Statement already executed.");
         }
         
-        if(RESERVED_ATTRIBUTE_NAMES.contains(attrib)) {
+        if(ReservedAttributeNames.containsName(attrib)) {
             throw new StatementException("Attribute name " + attrib + " is reserved.");
         }
         

@@ -2,7 +2,7 @@ package io.oopsie.sdk;
 
 import java.util.UUID;
 
-public class PartitionKey implements SettableAttribute {
+public class PartitionKey implements Attribute {
     
     private final UUID id;
     private final String name;
@@ -46,5 +46,30 @@ public class PartitionKey implements SettableAttribute {
      */
     public DataType getType() {
         return type;
+    }
+
+    @Override
+    public boolean isPrimaryKey() {
+        return true;
+    }
+
+    @Override
+    public boolean isPartitionKey() {
+        return true;
+    }
+
+    @Override
+    public boolean isClusterKey() {
+        return false;
+    }
+
+    @Override
+    public boolean isRegularColumn() {
+        return false;
+    }
+    
+    @Override
+    public boolean isSystemColumn() {
+        return ReservedAttributeNames.containsName(name);
     }
 }

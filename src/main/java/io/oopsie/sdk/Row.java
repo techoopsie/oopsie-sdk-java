@@ -32,7 +32,9 @@ public class Row {
      * @throws IllegalArgumentException
      */
     public Object get(String name) throws IllegalArgumentException {
-        nameValid(name);
+        if(!isNameValid(name)) {
+            throw new IllegalArgumentException(name + " is not a valid column name in this row.");
+        }
         return row.get(name);
     }
     
@@ -45,7 +47,9 @@ public class Row {
      * @throws IllegalArgumentException
      */
     public boolean getBool(String name) throws DataTypeException, IllegalArgumentException {
-        nameValid(name);
+        if(!isNameValid(name)) {
+            throw new IllegalArgumentException(name + " is not a valid column name in this row.");
+        }
         try {
             boolean bool = (Boolean)get(name);
             return bool;
@@ -63,7 +67,9 @@ public class Row {
      * @throws IllegalArgumentException
      */
     public int getInt(String name) throws DataTypeException, IllegalArgumentException {
-        nameValid(name);
+        if(!isNameValid(name)) {
+            throw new IllegalArgumentException(name + " is not a valid column name in this row.");
+        }
         try {
             int i = (Integer)get(name);
             return i;
@@ -81,7 +87,9 @@ public class Row {
      * @throws IllegalArgumentException
      */
     public long getLong(String name) throws DataTypeException, IllegalArgumentException {
-        nameValid(name);
+        if(!isNameValid(name)) {
+            throw new IllegalArgumentException(name + " is not a valid column name in this row.");
+        }
         try {
             long l = (Integer)get(name);
             return l;
@@ -99,7 +107,9 @@ public class Row {
      * @throws IllegalArgumentException
      */
     public String getString(String name) throws DataTypeException, IllegalArgumentException {
-        nameValid(name);
+        if(!isNameValid(name)) {
+            throw new IllegalArgumentException(name + " is not a valid column name in this row.");
+        }
         try {
             String s = (String)get(name);
             return s;
@@ -117,7 +127,9 @@ public class Row {
      * @throws IllegalArgumentException
      */
     public Date getTimestamp(String name) throws DataTypeException, IllegalArgumentException {
-        nameValid(name);
+        if(!isNameValid(name)) {
+            throw new IllegalArgumentException(name + " is not a valid column name in this row.");
+        }
         try {
             Instant instant = Instant.parse((String)get(name));
             Date d = new Date(instant.toEpochMilli());
@@ -136,7 +148,9 @@ public class Row {
      * @throws IllegalArgumentException
      */
     public UUID getUUID(String name) throws DataTypeException, IllegalArgumentException {
-        nameValid(name);
+        if(!isNameValid(name)) {
+            throw new IllegalArgumentException(name + " is not a valid column name in this row.");
+        }
         try {
             UUID uuid = UUID.fromString((String)get(name));
             return uuid;
@@ -145,10 +159,8 @@ public class Row {
         }
     }
     
-    private void nameValid(String name) throws IllegalArgumentException {
-        if(!row.keySet().contains(name)) {
-            throw new IllegalArgumentException("Name is not part of this row.");
-        }
+    private boolean isNameValid(String name) throws IllegalArgumentException {
+        return (row.keySet().contains(name) || row.keySet().contains(name.substring(0, name.lastIndexOf("_data"))));
     }
 
     /**

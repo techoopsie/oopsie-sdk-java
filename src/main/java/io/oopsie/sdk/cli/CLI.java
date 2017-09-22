@@ -320,9 +320,8 @@ public class CLI {
     }
     
     private void exit() {
-        System.out.println("Shutting down site ... ");
         site.close(30, TimeUnit.SECONDS);
-        System.out.println(" ... done!");
+        System.out.println("Done!");
         System.exit(0);
     }
     
@@ -395,12 +394,13 @@ public class CLI {
         
         Resource res = result.getStatement().getResource();
         int colSpace = 0;
-        for(String a : res.getAllSettableAttributeNames()) {
+        for(String a : result.getColumnNames()) {
             if(a.length() > colSpace) {
                 colSpace = a.length();
             }
         }
         colSpace += 10;
+        final int spaces = colSpace;
         
         Iterator<Row> iterator = result.iterator();
         int c = 0;
@@ -423,17 +423,26 @@ public class CLI {
             String pk = String.join("", "{", pkVals,"}");
             System.out.println("| ROW " + ++c + ", PK " + pk);
             System.out.println("|");
-            System.out.println(padOrTrunc("| eid:", colSpace - "| eid:".length()) + row.get("eid"));
-            System.out.println(padOrTrunc("| cra:", colSpace - "| cra:".length()) + row.get("cra"));
-            System.out.println(padOrTrunc("| crb:", colSpace - "| crb:".length()) + row.get("crb"));
-            System.out.println(padOrTrunc("| cha:", colSpace - "| cha:".length()) + row.get("cha"));
-            System.out.println(padOrTrunc("| chb:", colSpace - "| chb:".length()) + row.get("chb"));
-            for(String a : res.getRegularAttributes().keySet()) {
-                System.out.println( padOrTrunc("| " + a + ":", colSpace - ("| " + a + ":").length()) + row.get(a));
-                if(res.getRegularAttributes().get(a).getType().equals(DataType.RELATION)) {
-                    System.out.println( padOrTrunc("| " + a + "_data:", colSpace - ("| " + a + "_data:").length()) + row.get(a + "_data"));
+//            System.out.println(padOrTrunc("| eid:", colSpace - "| eid:".length()) + row.get("eid"));
+//            System.out.println(padOrTrunc("| cra:", colSpace - "| cra:".length()) + row.get("cra"));
+//            System.out.println(padOrTrunc("| crb:", colSpace - "| crb:".length()) + row.get("crb"));
+//            System.out.println(padOrTrunc("| cha:", colSpace - "| cha:".length()) + row.get("cha"));
+//            System.out.println(padOrTrunc("| chb:", colSpace - "| chb:".length()) + row.get("chb"));
+
+            result.getColumnMetaData().stream().forEach(md -> {
+                String a = md.getColumnName();
+                System.out.println( padOrTrunc("| " + a + ":", spaces - ("| " + a + ":").length()) + row.get(a));
+                if(md.isExpandColumn()) {
+                    System.out.println( padOrTrunc("| " + a + "_data:", spaces - ("| " + a + "_data:").length()) + row.get(a + "_data"));
                 }
-            }
+            });
+            
+//            for(String a : result.getColumnNames()) {
+//                System.out.println( padOrTrunc("| " + a + ":", colSpace - ("| " + a + ":").length()) + row.get(a));
+//                if(result.get.get(a).getType().equals(DataType.RELATION)) {
+//                    System.out.println( padOrTrunc("| " + a + "_data:", colSpace - ("| " + a + "_data:").length()) + row.get(a + "_data"));
+//                }
+//            }
             System.out.println("--------------------------------------------------");
         }
     }
