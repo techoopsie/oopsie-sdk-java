@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -258,14 +259,14 @@ public class CLI {
                     statement.expandRelations();
                 }
                 
-                // for now only support and get first id
+                // for now only support one id, .. so get first id
                 UUID id = paramMap.get(ReadParams.ID.command()) != null ?
                         UUID.fromString(paramMap.remove(ReadParams.ID.command()).get(0)) : null;
                 if(id != null) {
                     statement.withId(id);
                 }
                 
-                // last param supported in read is pk's, ... ignoring rest if any ...
+                // last param supported in read is pk's, ... ignoring rest if any other param types ...
                 List<String> pks = paramMap.remove(ReadParams.PK.command());
                 
                 if(pks != null) {
@@ -402,6 +403,13 @@ public class CLI {
         colSpace += 10;
         final int spaces = colSpace;
         
+        TreeSet<ResultSet.RowColumnMetaData> sortedCols = new TreeSet(new Comparator<ResultSet.RowColumnMetaData>() {
+            @Override
+            public int compare(ResultSet.RowColumnMetaData o1, ResultSet.RowColumnMetaData o2) {
+                return o1.getColumnName().compareTo(o2.getColumnName());
+            }
+        });
+        sortedCols.addAll(result.getColumnMetaData());
         Iterator<Row> iterator = result.iterator();
         int c = 0;
         System.out.println("--------------------------------------------------");
@@ -423,26 +431,10 @@ public class CLI {
             String pk = String.join("", "{", pkVals,"}");
             System.out.println("| ROW " + ++c + ", PK " + pk);
             System.out.println("|");
-//            System.out.println(padOrTrunc("| eid:", colSpace - "| eid:".length()) + row.get("eid"));
-//            System.out.println(padOrTrunc("| cra:", colSpace - "| cra:".length()) + row.get("cra"));
-//            System.out.println(padOrTrunc("| crb:", colSpace - "| crb:".length()) + row.get("crb"));
-//            System.out.println(padOrTrunc("| cha:", colSpace - "| cha:".length()) + row.get("cha"));
-//            System.out.println(padOrTrunc("| chb:", colSpace - "| chb:".length()) + row.get("chb"));
-
-            result.getColumnMetaData().stream().forEach(md -> {
+            sortedCols.forEach(md -> {
                 String a = md.getColumnName();
                 System.out.println( padOrTrunc("| " + a + ":", spaces - ("| " + a + ":").length()) + row.get(a));
-                if(md.isExpandColumn()) {
-                    System.out.println( padOrTrunc("| " + a + "_data:", spaces - ("| " + a + "_data:").length()) + row.get(a + "_data"));
-                }
             });
-            
-//            for(String a : result.getColumnNames()) {
-//                System.out.println( padOrTrunc("| " + a + ":", colSpace - ("| " + a + ":").length()) + row.get(a));
-//                if(result.get.get(a).getType().equals(DataType.RELATION)) {
-//                    System.out.println( padOrTrunc("| " + a + "_data:", colSpace - ("| " + a + "_data:").length()) + row.get(a + "_data"));
-//                }
-//            }
             System.out.println("--------------------------------------------------");
         }
     }
