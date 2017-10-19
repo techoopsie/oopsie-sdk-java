@@ -1,11 +1,9 @@
 package io.oopsie.sdk;
 
-import java.util.EnumSet;
-
 /**
  * oopsie system column names.
  */
-public enum ReservedAttributeNames {
+public enum OopsieAttributeNames {
     
     cid,
     eid,
@@ -18,7 +16,7 @@ public enum ReservedAttributeNames {
         
         boolean contains = true;
         try {
-            ReservedAttributeNames.valueOf(name);
+            OopsieAttributeNames.valueOf(name);
         } catch(IllegalArgumentException e) {
             contains = false;
         }

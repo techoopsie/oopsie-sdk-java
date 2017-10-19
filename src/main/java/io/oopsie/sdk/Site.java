@@ -269,7 +269,7 @@ public class Site {
      * 
      * @param timeout
      * @param timeUnit
-     * @return true if {@link Site} was gracefully close, false if forced.
+     * @return true if {@link Site} was gracefully closed, false if forced.
      * 
      */
     public boolean close(long timeout, TimeUnit timeUnit) {

@@ -4,14 +4,14 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * Holds information ({@link Row}s) for an executed {@link Statement}.
+ * Holds ({@link Row}s) information for an executed {@link Statement}.
  * 
  * Note, instances of this class are not thread safe.
  * 
@@ -20,9 +20,8 @@ public class ResultSet implements Iterable<Row> {
     
     private final boolean applied;
     private final Statement statement;
-    private final Deque<Row> rows = new ArrayDeque<>();
-    private Set<String> columnNames;
-    private Set<RowColumnMetaData> columnMetaData;
+    private final Deque<Row> rows = new ArrayDeque();
+    private Map<String, RowColumnMetaData> columnMetaData;
     
     /**
      * Used internally by SDK to produce a {@link Statement} result.
@@ -108,7 +107,7 @@ public class ResultSet implements Iterable<Row> {
     
     /**
      * Returns the next row from this result. Null if exhausted.
-     * @return bext row or null if exhausted.
+     * @return next row or null if exhausted.
      */
     public Row one() {
         return rows.poll();
@@ -116,33 +115,35 @@ public class ResultSet implements Iterable<Row> {
 
     /**
      * Returns the names of all columns in this ResultSet. Note that some of
-     * the columns are created internally as helper columns and not paert of
+     * the columns are created internally as helper columns and not part of
      * the {@link Resdource} model created by the user and therefore not
      * settable.
      * @return set of attribute names.
      */
     public Set<String> getColumnNames() {
-        return columnNames != null ? Collections.unmodifiableSet(columnNames) : Collections.EMPTY_SET;
+        return columnMetaData != null ? columnMetaData.keySet() : Collections.EMPTY_SET;
     }
 
     /**
-     * Returns the column meta data for the included row columns.
+     * Returns the column meta data for the included row columns. Column name
+     * is mapped to its RowColumnMetaData.
+     * 
      * @return row column meta data.
      */
-        public Set<RowColumnMetaData> getColumnMetaData() {
-        return columnMetaData != null ? Collections.unmodifiableSet(columnMetaData) : Collections.EMPTY_SET;
+        public Map<String, RowColumnMetaData> getColumnMetaData() {
+        return columnMetaData != null ? Collections.unmodifiableMap(columnMetaData) : Collections.EMPTY_MAP;
     }
 
     private void createRows(List<Map<String, Object>> data) {
         
         // fetch first to crate result meta data
-        if(!data.isEmpty()) {
-            this.columnNames = data.get(0).keySet();
-
-            columnMetaData = new HashSet();
-            this.columnNames.forEach(colName -> {
+        if(!data.isEmpty() && data.get(0) != null) {
+            
+            Map tempMetaData = new LinkedHashMap();
+            data.get(0).keySet().forEach(colName -> {
 
                 Attribute attrib = statement.getResource().getAttribute(colName);
+                DataType type;
                 boolean systemColumn = true;
                 boolean modelSupported = false;
                 boolean expandColumn = false;
@@ -150,20 +151,28 @@ public class ResultSet implements Iterable<Row> {
                     // next is a very primitive way of deciding the expand column status ...
                     // important though is that it is contained within this block.
                     expandColumn = colName.toLowerCase().endsWith("_data");
+                    if(expandColumn) {
+                        type = DataType.EXPAND;
+                    } else {
+                        type = DataType.UNDEFINED;
+                    }
                 } else {
+                    type = attrib.getType();
                     modelSupported = true;
                     systemColumn =  attrib.isSystemColumn();
                 }
-                columnMetaData.add(new RowColumnMetaData(
-                                colName,
-                                systemColumn,
-                                modelSupported,
-                                expandColumn));
+                tempMetaData.put(colName, new RowColumnMetaData(
+                                        colName,
+                                        type,
+                                        systemColumn,
+                                        modelSupported,
+                                        expandColumn));
             });
+            columnMetaData = Collections.unmodifiableMap(tempMetaData);
 
             // create the actual rows ...
             data.forEach(dataRow -> {
-                    Row row = new Row(dataRow);
+                    Row row = new Row(columnMetaData, dataRow);
                     rows.add(row);
             });
         }
@@ -172,11 +181,12 @@ public class ResultSet implements Iterable<Row> {
     public static class RowColumnMetaData {
 
         private String columnName;
+        private DataType dataType;
         private boolean systemColumn;
         private boolean modelSupported;
         private boolean expandColumn;
         
-        private RowColumnMetaData(String columnName, boolean systemColumn,
+        private RowColumnMetaData(String columnName, DataType dataType, boolean systemColumn,
                 boolean modelSupported, boolean expandColumn) {
             
             if(!systemColumn && expandColumn) {
@@ -186,13 +196,26 @@ public class ResultSet implements Iterable<Row> {
                 throw new IllegalArgumentException("Can't be both model supported and expand column");
             }
             this.columnName = columnName;
+            this.dataType = dataType;
             this.systemColumn = systemColumn;
             this.modelSupported = modelSupported;
             this.expandColumn = expandColumn;
         }
 
+        /**
+         * The attribute name of the row column as declared on the resource.
+         * @return column name
+         */
         public String getColumnName() {
             return columnName;
+        }
+
+        /**
+         * The data type of the column.
+         * @return data type
+         */
+        public DataType getDataType() {
+            return dataType;
         }
 
         /**

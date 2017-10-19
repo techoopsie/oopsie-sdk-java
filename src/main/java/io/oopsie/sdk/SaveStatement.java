@@ -11,36 +11,38 @@ import java.util.concurrent.Future;
 import org.springframework.http.HttpMethod;
 
 /**
- * Use this class to create and persist ( HTTP POST) entities for a {@link Resource}.
+ * Use this class to save persisted ( HTTP POST) entities for a {@link Resource}.
  * Instances of this class are thread safe and can
  * be uses with {@link Site#executeAsync(io.oopsie.sdk.model.Statement)}
  * to produce a {@link Future} to fetch related {@link ResultSet}.
  */
-public class CreateStatement extends Statement<CreateStatement> {
-    
+public class SaveStatement extends Statement<SaveStatement> {
+
     private Map<String, Object> attribVals;
     
     /**
-     * Used internally to initialize a {@link CreateStatement} for a {@link Resource}.
+     * Used internally to initialize a {@link SaveStatement} for a {@link Resource}.
      * 
      * @param resource
+     * @param pk 
+     * @throws StatementException
      */
-    CreateStatement(Resource resource) {
+    SaveStatement(Resource resource) {
         super(resource);
     }
-   
+       
     @Override
     protected synchronized final ResultSet execute(URI baseApiUri, UUID customerId,
             UUID siteId, String apiKey, String cookie)
             throws AlreadyExecutedException, StatementExecutionException {
         
-        setRequestMethod(HttpMethod.POST);
+        setRequestMethod(HttpMethod.PUT);
         setRequestBody(attribVals);
         return super.execute(baseApiUri, customerId, siteId, apiKey, cookie);
     }
     
     @Override
-    public final CreateStatement withParam(String attrib, Object val)
+    public final SaveStatement withParam(String attrib, Object val)
             throws AlreadyExecutedException, StatementException {
         
         if(isExecuted()) {
@@ -59,12 +61,12 @@ public class CreateStatement extends Statement<CreateStatement> {
     }
     
     @Override
-    public final CreateStatement withParams(Map<String, Object> attribs) throws AlreadyExecutedException, StatementException {
+    public final SaveStatement withParams(Map<String, Object> attribs) throws AlreadyExecutedException, StatementException {
         
         attribs.forEach((a,v) -> withParam(a, v));
         return this;
     }
-
+    
     @Override
     public void reset() {
         attribVals = null;

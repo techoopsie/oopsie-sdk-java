@@ -70,6 +70,6 @@ public class PartitionKey implements Attribute {
     
     @Override
     public boolean isSystemColumn() {
-        return ReservedAttributeNames.containsName(name);
+        return OopsieAttributeNames.containsName(name);
     }
 }

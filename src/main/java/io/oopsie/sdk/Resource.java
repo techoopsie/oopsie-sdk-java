@@ -83,7 +83,7 @@ public class Resource {
     /**
      * Returns all settable attribute names that are 
      * either partition or clustering attribute.This method excludes oopsie system
-     * attribute names.
+     * attribute names, but includes "eid".
      * 
      * @return all settable primary key attributes
      */
@@ -91,7 +91,6 @@ public class Resource {
         Set<String> all = new HashSet();
         all.addAll(getPartitionKeyNames());
         all.addAll(getClusterKeyNames());
-        all.remove("eid");
         all.remove("cid");
         return Collections.unmodifiableSet(all);
     }
@@ -99,7 +98,7 @@ public class Resource {
     /**
      * Returns all settable attributes names including partition
      * and clustering attributes. This method excludes oopsie system
-     * attribute names.
+     * attribute names, but includes "eid".
      *
      * @return all settable attribute names
      */
@@ -109,7 +108,6 @@ public class Resource {
         all.addAll(getPartitionKeyNames());
         all.addAll(getClusterKeyNames());
         all.remove("cid");
-        all.remove("eid");
         all.remove("cra");
         all.remove("crb");
         all.remove("cha");
@@ -220,46 +218,40 @@ public class Resource {
     }
     
     /**
-     * Returns a {@link GetStatement} for the passed in {@link Resource}
-     * entity id.
+     * Returns a {@link SaveStatement} for this resource. You need to set
+     * the specific reource enitity's primary key params.
      * 
-     * @param entityId
-     * @return a {@link GetStatement}
+     * @return a {@link  SaveStatement}
+     * @see SaveStatement#withParam(java.lang.String, java.lang.Object)
+     * @see SaveStatement#withParams(java.util.Map) 
      */
-    public GetStatement get(UUID entityId) {
-        return new GetStatement(this, entityId);
+    public SaveStatement save() {
+        return new SaveStatement(this);
     }
     
     /**
-     * Returns a {@link GetStatement} for the passed in {@link Resource}
-     * entity id.
-     * 
-     * @param entityId
-     * @param queryParams query parameters
-     * @return a {@link GetStatement}
-     */
-    public GetStatement get(UUID entityId, Map<String, Object> queryParams) {
-        return new GetStatement(this, queryParams, entityId);
-    }
-    
-    /**
-     * Returns a {@link GetStatement} to retrive all entities. Note that the
-     * statment is restricted with a default fetch size limit.
+     * Returns a {@link GetStatement}. Executing the statement as is will
+     * fetch all resource entitities, limited by fetch size. You need to set
+     * the specific reource enitity's primary key params to fetch a specific
+     * entity.
      * 
      * @return a {@link GetStatement}
+     * @see GetStatement#withParam(java.lang.String, java.lang.Object)
+     * @see GetStatement#withParams(java.util.Map) 
      */
     public GetStatement get() {
         return new GetStatement(this);
     }
     
     /**
-     * Returns a {@link GetStatement} to retrive all entities. Note that the
-     * statment is restricted with a default fetch size limit.
+     * Returns a {@link DeleteStatement} for this resource. You need to set
+     * the specific reource enitity's primary key params.
      * 
-     * @param queryParams query parameters
-     * @return a {@link GetStatement}
+     * @return a {@link  DeleteStatement}
+     * @see DeleteStatement#withParam(java.lang.String, java.lang.Object)
+     * @see DeleteStatement#withParams(java.util.Map) 
      */
-    public GetStatement get(Map<String, Object> queryParams) {
-        return new GetStatement(this, queryParams);
+    public DeleteStatement delete() {
+        return new DeleteStatement(this);
     }
 }

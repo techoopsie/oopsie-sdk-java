@@ -3,9 +3,11 @@ package io.oopsie.sdk;
 import io.oopsie.sdk.error.AlreadyExecutedException;
 import io.oopsie.sdk.error.StatementExecutionException;
 import io.oopsie.sdk.error.NotExecutedException;
+import io.oopsie.sdk.error.StatementException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -18,7 +20,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-public abstract class Statement {
+public abstract class Statement<T extends Statement> {
     
     protected final Resource resource;
     private HttpMethod requestMethod;
@@ -30,6 +32,66 @@ public abstract class Statement {
     Statement(Resource resource) {
         this.resource = resource;
     }
+    
+    /**
+     * Adds and/or replaces passed in param.
+     * 
+     * @param name name of param
+     * @param value value of param
+     * @return this {@link GetStatement}
+     * @see #reset() 
+     * @throws AlreadyExecutedException
+     * @throws StatementException if param is not part of this resource
+     */
+    public T withParam(String name, Object value) throws AlreadyExecutedException, StatementException {
+        
+        if(isExecuted()) {
+            throw new AlreadyExecutedException("Statement already executed.");
+        }
+        
+        if(!resource.getAllAttributeNames().contains(
+                name.substring(0, (name.indexOf("[") !=  -1 ? name.indexOf("[") : name.length()))
+        )) {
+            throw new StatementException("Param is not part of this resource."
+                    + " Only use attributes of current resource");
+        }
+        
+        if(this.queryparams == null) {
+            this.queryparams = new HashMap();
+        }
+        this.queryparams.put(name, value);
+        return (T)this;
+    }
+    
+    /**
+     * Adds and/or replaces passed in params.
+     * 
+     * @param params map of params
+     * @return this {@link T}
+     * @see #reset() 
+     * @throws AlreadyExecutedException
+     * @throws StatementException if any param is not part of this resource
+     */
+    public T withParams(Map<String, Object> params) throws AlreadyExecutedException, StatementException {
+        
+        if(isExecuted()) {
+            throw new AlreadyExecutedException("Statement already executed.");
+        }
+        
+        if(!params.keySet().stream().allMatch(param -> resource.getAllAttributeNames().contains(
+                param.substring(0, (param.indexOf("[") !=  -1 ? param.indexOf("[") : param.length()))
+        ))) {
+            throw new StatementException("Some params are not part of this resource."
+                    + " Only use attributes of current resource");
+        }
+        
+        if(this.queryparams == null) {
+            this.queryparams = new HashMap();
+        }
+        this.queryparams.putAll(params);
+        return (T)this;
+    }
+
     
     /**
      * Ruturns true if this {@link Statement} is executed.
@@ -125,7 +187,7 @@ public abstract class Statement {
                     requestUri,
                     requestMethod,
                     httpEntity,
-                    Object.class);
+                    Map.class);
             
             
         } catch(Exception ex) {
