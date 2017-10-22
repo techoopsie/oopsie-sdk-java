@@ -1,8 +1,9 @@
 package io.oopsie.sdk.error;
 
+import io.oopsie.sdk.Site;
+
 /**
- *
- * @author nicolas
+ * Trrown When a {@link Site} could not be initialized.
  */
 public class SiteInitializationException extends OopsieSiteException {
 

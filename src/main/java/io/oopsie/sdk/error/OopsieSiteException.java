@@ -1,5 +1,8 @@
 package io.oopsie.sdk.error;
 
+/**
+ * Base exception.
+ */
 public class OopsieSiteException extends RuntimeException {
 
     public OopsieSiteException() {

@@ -116,7 +116,7 @@ public class ResultSet implements Iterable<Row> {
     /**
      * Returns the names of all columns in this ResultSet. Note that some of
      * the columns are created internally as helper columns and not part of
-     * the {@link Resdource} model created by the user and therefore not
+     * the {@link Resource} model created by the user and therefore not
      * settable.
      * @return set of attribute names.
      */

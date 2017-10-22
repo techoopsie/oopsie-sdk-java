@@ -1,7 +1,7 @@
 package io.oopsie.sdk;
 
 import io.oopsie.sdk.error.AlreadyExecutedException;
-import io.oopsie.sdk.error.StatementException;
+import io.oopsie.sdk.error.StatementParamException;
 import io.oopsie.sdk.error.StatementExecutionException;
 import java.net.URI;
 import java.util.UUID;
@@ -13,7 +13,7 @@ public class DeleteStatement extends Statement<DeleteStatement> {
      * 
      * @param resource
      * @param pk 
-     * @throws StatementException
+     * @throws StatementParamException
      */
     DeleteStatement(Resource resource) {
         super(resource);

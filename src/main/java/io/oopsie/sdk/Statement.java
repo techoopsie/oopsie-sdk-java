@@ -3,7 +3,7 @@ package io.oopsie.sdk;
 import io.oopsie.sdk.error.AlreadyExecutedException;
 import io.oopsie.sdk.error.StatementExecutionException;
 import io.oopsie.sdk.error.NotExecutedException;
-import io.oopsie.sdk.error.StatementException;
+import io.oopsie.sdk.error.StatementParamException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,6 +20,11 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+/**
+ * A Statement is the executional definition for a specific {@link Resource} 
+ * @author nicolas
+ * @param <T> sub type
+ */
 public abstract class Statement<T extends Statement> {
     
     protected final Resource resource;
@@ -29,6 +34,10 @@ public abstract class Statement<T extends Statement> {
     private boolean executed;
     private ResultSet result;
 
+    /**
+     * Creates a new Statement for specified {@link Resource}.
+     * @param resource a resource
+     */
     Statement(Resource resource) {
         this.resource = resource;
     }
@@ -40,10 +49,10 @@ public abstract class Statement<T extends Statement> {
      * @param value value of param
      * @return this {@link GetStatement}
      * @see #reset() 
-     * @throws AlreadyExecutedException
-     * @throws StatementException if param is not part of this resource
+     * @throws AlreadyExecutedException if executed
+     * @throws StatementParamException if param is not part of this resource
      */
-    public T withParam(String name, Object value) throws AlreadyExecutedException, StatementException {
+    public T withParam(String name, Object value) throws AlreadyExecutedException, StatementParamException {
         
         if(isExecuted()) {
             throw new AlreadyExecutedException("Statement already executed.");
@@ -52,7 +61,7 @@ public abstract class Statement<T extends Statement> {
         if(!resource.getAllAttributeNames().contains(
                 name.substring(0, (name.indexOf("[") !=  -1 ? name.indexOf("[") : name.length()))
         )) {
-            throw new StatementException("Param is not part of this resource."
+            throw new StatementParamException("Param is not part of this resource."
                     + " Only use attributes of current resource");
         }
         
@@ -69,10 +78,10 @@ public abstract class Statement<T extends Statement> {
      * @param params map of params
      * @return this {@link T}
      * @see #reset() 
-     * @throws AlreadyExecutedException
-     * @throws StatementException if any param is not part of this resource
+     * @throws AlreadyExecutedException if executed
+     * @throws StatementParamException if any param is not part of this resource
      */
-    public T withParams(Map<String, Object> params) throws AlreadyExecutedException, StatementException {
+    public T withParams(Map<String, Object> params) throws AlreadyExecutedException, StatementParamException {
         
         if(isExecuted()) {
             throw new AlreadyExecutedException("Statement already executed.");
@@ -81,7 +90,7 @@ public abstract class Statement<T extends Statement> {
         if(!params.keySet().stream().allMatch(param -> resource.getAllAttributeNames().contains(
                 param.substring(0, (param.indexOf("[") !=  -1 ? param.indexOf("[") : param.length()))
         ))) {
-            throw new StatementException("Some params are not part of this resource."
+            throw new StatementParamException("Some params are not part of this resource."
                     + " Only use attributes of current resource");
         }
         
@@ -104,13 +113,34 @@ public abstract class Statement<T extends Statement> {
     /**
      * Returns the {@link ResultSet} for the executed {@link Statement}.
      * @return the {@link ResultSet}
-     * @throws NotExecutedException 
+     * @throws NotExecutedException if not executed
      */
     public final ResultSet getResult() throws NotExecutedException {
         if(!isExecuted()) {
             throw new NotExecutedException("Statement not yet executed");
         }
         return result;
+    }
+    
+    /**
+     * Resets this statement to its initial state when instance was created so this
+     * {@link Statement} can be reused and executed once more. Note, any result
+     * that this {@link Statement} holds will be lost.
+     */
+    public void reset() {
+        this.queryparams = null;
+        this.result = null;
+        this.requestBody = null;
+        this.requestMethod = null;
+        this.executed = false;
+    }
+    
+    /**
+     * Returns the target resource.
+     * @return {@link Resource}
+     */
+    public Resource getResource() {
+        return resource;
     }
 
     protected final HttpMethod getRequestMethod() {
@@ -216,26 +246,5 @@ public abstract class Statement<T extends Statement> {
         }
         this.executed = true;
         return this.result;
-    }
-    
-    /**
-     * Resets this statement to its initial state when instance was created so this
-     * {@link Statement} can be reused and executed once more. Note, any result
-     * that this {@link Statement} holds will be lost.
-     */
-    public void reset() {
-        this.queryparams = null;
-        this.result = null;
-        this.requestBody = null;
-        this.requestMethod = null;
-        this.executed = false;
-    }
-    
-    /**
-     * Returns the target resource.
-     * @return {@link Resource}
-     */
-    public Resource getResource() {
-        return resource;
     }
 }

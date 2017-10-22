@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * A handle to a specific resource defined in an OOPSIE CLoud {@link Site}.
+ */
 public class Resource {
 
     private final UUID resourceId;
@@ -16,6 +19,16 @@ public class Resource {
     private final Map<String, View> views;
     private final Map<String, Auth> auths;
 
+    /**
+     * 
+     * @param resourceId the resourceId
+     * @param name the name
+     * @param attributes the attributes
+     * @param partitionKeys the partition keys
+     * @param clusterKeys the cluster keys
+     * @param views the views
+     * @param auths the auths
+     */
     Resource(
             UUID resourceId,
             String name,
@@ -37,7 +50,7 @@ public class Resource {
     
     /**
      * Returns the resource id.
-     * @return a id
+     * @return an id
      */
     public final UUID getResourceId() {
         return resourceId;

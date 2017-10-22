@@ -1,5 +1,10 @@
 package io.oopsie.sdk.error;
 
+import io.oopsie.sdk.Site;
+
+/**
+ * Thrown if the {@link Site} identifications could be parsed.
+ */
 public class IllegalIdentificationException extends OopsieSiteException {
 
     public IllegalIdentificationException() {

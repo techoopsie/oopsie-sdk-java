@@ -1,5 +1,10 @@
 package io.oopsie.sdk.error;
 
+import io.oopsie.sdk.Statement;
+
+/**
+ * Thrown if {@link Statement} has been executed.
+ */
 public class AlreadyExecutedException extends OopsieSiteException {
 
     public AlreadyExecutedException() {

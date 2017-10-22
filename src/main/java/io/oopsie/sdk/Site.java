@@ -1,6 +1,6 @@
 package io.oopsie.sdk;
 
-import io.oopsie.sdk.error.UserException;
+import io.oopsie.sdk.error.SevereUserException;
 import io.oopsie.sdk.error.AlreadyExecutedException;
 import io.oopsie.sdk.error.ApiURIException;
 import io.oopsie.sdk.error.StatementExecutionException;
@@ -47,13 +47,13 @@ public class Site {
     private Applications applications;
 
     /**
-     * Create a new {@link OopsieSite} object. to be able to use it you need
+     * Create a new {@link Site} object. to be able to use it you need
      * to call {@link #init()} first.
      * 
      * @param apiUri the api URI provided from your site settings.
      * @param customerId the customer id provided from your site settings.
      * @param siteId the site id provided from your site settings.
-     * @throws SiteCreationException 
+     * @throws SiteCreationException if not able to create Site
      */
     public Site(String apiUri, String customerId, String siteId) throws SiteCreationException {
         
@@ -72,14 +72,14 @@ public class Site {
     }
     
     /**
-     * Create a new {@link OopsieSite} object. to be able to use it you need
+     * Create a new {@link Site} object. to be able to use it you need
      * to call {@link #init()} first.
      * 
      * @param apiUri the api URI provided from your site settings.
      * @param customerId the customer id provided from your site settings.
      * @param siteId the site id provided from your site settings.
      * @param apiKey the api key provided from your site settings.
-     * @throws SiteCreationException 
+     * @throws SiteCreationException if not able to create site
      */
     public Site(String apiUri, String customerId, String siteId, String apiKey) throws SiteCreationException {
         this(apiUri, customerId, siteId);
@@ -267,8 +267,8 @@ public class Site {
      * Closing this {@link Site} and releases any resources this object holds gracefully.
      * To use the {@link Site} object again you need to call {@link #init()} again.
      * 
-     * @param timeout
-     * @param timeUnit
+     * @param timeout the time
+     * @param timeUnit the time unit
      * @return true if {@link Site} was gracefully closed, false if forced.
      * 
      */
@@ -296,7 +296,7 @@ public class Site {
      * Logging in using passed in {@link User}.
      * @param user the user to login 
      */
-    public void login(User user) throws UserException {
+    public void login(User user) throws SevereUserException {
         
         String loginURI = String.join("",
                 apiUri.toString(),
@@ -318,7 +318,7 @@ public class Site {
                     String.class);
             
         } catch(Exception ex) {
-            throw new UserException("Severe: " + ex.getMessage());
+            throw new SevereUserException("Severe: " + ex.getMessage());
         }
         
         List<String> cookies = response.getHeaders().get("Set-Cookie");
@@ -341,17 +341,16 @@ public class Site {
         
         HttpEntity logoutEntity =  new HttpEntity(null, logoutHeaders);
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity response = null;
         try {
             
-            response = restTemplate.exchange(
+            restTemplate.exchange(
                     loginURI,
                     HttpMethod.POST,
                     logoutEntity,
                     String.class);
             
         } catch(Exception ex) {
-            throw new UserException("Severe: " + ex.getMessage());
+            throw new SevereUserException("Severe: " + ex.getMessage());
         }
         this.authCookie = null;
         this.refreshAuthCookie = null;

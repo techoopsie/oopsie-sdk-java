@@ -1,6 +1,6 @@
 package io.oopsie.sdk;
 
-import io.oopsie.sdk.error.ModelException;
+import io.oopsie.sdk.error.NotFoundInModelException;
 
 public class Application {
     
@@ -12,11 +12,12 @@ public class Application {
     
     /**
      * Returns the named {@link Resource} from related {@link Site} object.
+     * 
      * @param name the name of the resource to get
      * @return the named {@link Resource}
-     * @throws ModelException if name is not part of the model
+     * @throws NotFoundInModelException if name is not part of the model
      */
-    public final Resource getResource(String name) throws ModelException {
+    public final Resource getResource(String name) throws NotFoundInModelException {
         return this.resources.getResource(name);
     }
 }

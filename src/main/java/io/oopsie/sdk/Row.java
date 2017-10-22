@@ -29,9 +29,9 @@ public class Row {
      * Returns the value for name as Boolean.
      * 
      * @param name the name of the row column
-     * @throws DataTypeException
+     * @throws DataTypeException if not able to cast to Boolean
      * @return valus as Boolean
-     * @throws IllegalArgumentException
+     * @throws IllegalArgumentException if name is not part of this row
      */
     public Boolean getBool(String name) throws DataTypeException, IllegalArgumentException {
         checkNameAndType(name, DataType.BOOLEAN);
@@ -47,8 +47,8 @@ public class Row {
      * 
      * @param name the name of the row column
      * @return valus as Integer
-     * @throws DataTypeException
-     * @throws IllegalArgumentException
+     * @throws DataTypeException if not able to cast to Integer
+     * @throws IllegalArgumentException if name is not part of this row
      */
     public Integer getInt(String name) throws DataTypeException, IllegalArgumentException {
         checkNameAndType(name, DataType.NUMBER_INTEGER);
@@ -64,8 +64,8 @@ public class Row {
      * 
      * @param name the name of the row column
      * @return valus as Long
-     * @throws DataTypeException
-     * @throws IllegalArgumentException
+     * @throws DataTypeException if not able to cast to Long
+     * @throws IllegalArgumentException if name is not part of this row
      */
     public Long getLong(String name) throws DataTypeException, IllegalArgumentException {
         checkNameAndType(name, DataType.NUMBER_BIG_INTEGER);
@@ -89,8 +89,8 @@ public class Row {
      * 
      * @param name the name of the row column
      * @return valus as double
-     * @throws DataTypeException
-     * @throws IllegalArgumentException
+     * @throws DataTypeException if not able to cast to Double
+     * @throws IllegalArgumentException if name is not part of this row
      */
     public Double getDouble(String name) throws DataTypeException, IllegalArgumentException {
         checkNameAndType(name, DataType.NUMBER_DECIMAL);
@@ -116,8 +116,8 @@ public class Row {
      * 
      * @param name the name of the row column
      * @return valus as String
-     * @throws DataTypeException
-     * @throws IllegalArgumentException
+     * @throws DataTypeException if not able to cast to String
+     * @throws IllegalArgumentException if name is not part of this row
      */
     public String getString(String name) throws DataTypeException, IllegalArgumentException {
         checkNameAndType(name, DataType.TEXT);
@@ -133,8 +133,8 @@ public class Row {
      * 
      * @param name the name of the row column
      * @return valus as Date
-     * @throws DataTypeException
-     * @throws IllegalArgumentException
+     * @throws DataTypeException if not able to cast to Date
+     * @throws IllegalArgumentException if name is not part of this row
      */
     public Date getTimestamp(String name) throws DataTypeException, IllegalArgumentException {
         checkNameAndType(name, DataType.TIMESTAMP);
@@ -150,8 +150,8 @@ public class Row {
      * 
      * @param name the name of the row column
      * @return valus as Set
-     * @throws DataTypeException
-     * @throws IllegalArgumentException
+     * @throws DataTypeException if not able to cast to Set
+     * @throws IllegalArgumentException if name is not part of this row
      */
     public Set getSet(String name) throws DataTypeException, IllegalArgumentException {
         checkNameAndType(name, DataType.COLLECTION_SET);
@@ -167,8 +167,8 @@ public class Row {
      * 
      * @param name the name of the row column
      * @return valus as List
-     * @throws DataTypeException
-     * @throws IllegalArgumentException
+     * @throws DataTypeException if not able to cast to List
+     * @throws IllegalArgumentException if name is not part of this row
      */
     public List getList(String name) throws DataTypeException, IllegalArgumentException {
         checkNameAndType(name, DataType.COLLECTION_LIST);
@@ -184,8 +184,8 @@ public class Row {
      * 
      * @param name the name of the row column
      * @return valus as Map
-     * @throws DataTypeException
-     * @throws IllegalArgumentException
+     * @throws DataTypeException if not able to cast to Map
+     * @throws IllegalArgumentException if name is not part of this row
      */
     public Map getMap(String name) throws DataTypeException, IllegalArgumentException {
         checkNameAndType(name, DataType.COLLECTION_MAP);
@@ -201,8 +201,8 @@ public class Row {
      * 
      * @param name the name of the row column
      * @return value as UUID
-     * @throws DataTypeException
-     * @throws IllegalArgumentException
+     * @throws DataTypeException if not able to cast to UUID
+     * @throws IllegalArgumentException if name is not part of this row
      */
     public UUID getUUID(String name) throws DataTypeException, IllegalArgumentException {
         checkNameAndType(name, DataType.UUID);
@@ -216,9 +216,10 @@ public class Row {
     /**
      * Returns the primary key of the relation resource rentity. A map with
      * PK attribute names mapped to their values.
+     * @param name the name of the row column
      * @return a relation map
-     * @throws DataTypeException
-     * @throws IllegalArgumentException
+     * @throws DataTypeException if not able to cast to Map
+     * @throws IllegalArgumentException if name is not part of this row
      */
     public Map<String, Object> getRelation(String name) throws DataTypeException, IllegalArgumentException {
         checkNameAndType(name, DataType.RELATION);
