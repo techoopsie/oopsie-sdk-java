@@ -1,14 +1,14 @@
 package io.oopsie.sdk;
 
-public class User {
+public class UserCredentials {
     
     private String email;
     private String password;
 
-    public User() {
+    public UserCredentials() {
     }
 
-    public User(String email, String password) {
+    public UserCredentials(String email, String password) {
         this.email = email;
         this.password = password;
     }

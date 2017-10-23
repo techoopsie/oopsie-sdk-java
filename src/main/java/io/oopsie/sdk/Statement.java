@@ -8,8 +8,10 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -28,6 +30,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public abstract class Statement<T extends Statement> {
     
     protected final Resource resource;
+    private Set<String> extraParams;
     private HttpMethod requestMethod;
     private Object requestBody;
     private Map<String, Object> queryparams; 
@@ -57,14 +60,7 @@ public abstract class Statement<T extends Statement> {
         if(isExecuted()) {
             throw new AlreadyExecutedException("Statement already executed.");
         }
-        
-        if(!resource.getAllAttributeNames().contains(
-                name.substring(0, (name.indexOf("[") !=  -1 ? name.indexOf("[") : name.length()))
-        )) {
-            throw new StatementParamException("Param is not part of this resource."
-                    + " Only use attributes of current resource");
-        }
-        
+        validateParamName(name);
         if(this.queryparams == null) {
             this.queryparams = new HashMap();
         }
@@ -86,19 +82,37 @@ public abstract class Statement<T extends Statement> {
         if(isExecuted()) {
             throw new AlreadyExecutedException("Statement already executed.");
         }
-        
-        if(!params.keySet().stream().allMatch(param -> resource.getAllAttributeNames().contains(
-                param.substring(0, (param.indexOf("[") !=  -1 ? param.indexOf("[") : param.length()))
-        ))) {
-            throw new StatementParamException("Some params are not part of this resource."
-                    + " Only use attributes of current resource");
-        }
-        
+        params.keySet().forEach(param -> validateParamName(param));
         if(this.queryparams == null) {
             this.queryparams = new HashMap();
         }
         this.queryparams.putAll(params);
         return (T)this;
+    }
+    
+    private void validateParamName(String name) throws StatementParamException {
+        
+        Set<String> allParams = new HashSet();
+        allParams.addAll(resource.getAllAttributeNames());
+        if(extraParams != null) {
+            allParams.addAll(extraParams);
+        }
+                
+        if(!allParams.contains(
+                name.substring(0, (name.contains("[") ? name.indexOf("[") : name.length())))) {
+            throw new StatementParamException("Param '" + name + "' is not part of this resource."
+                    + " Only use attributes of current resource and statement.");
+        }
+    }
+
+    /**
+     * Set any extra params used by sub statements to be allowed to be
+     * set when calling {@link #withParam(java.lang.String, java.lang.Object) }
+     * and {@link #withParams(java.util.Map) }
+     * @param statementParams set of param names
+     */
+    protected void setExtraParams(Set<String> statementParams) {
+        this.extraParams = statementParams;
     }
 
     

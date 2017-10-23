@@ -29,6 +29,7 @@ public class SaveStatement extends Statement<SaveStatement> {
      */
     SaveStatement(Resource resource) {
         super(resource);
+        setRequestMethod(HttpMethod.PUT);
     }
        
     @Override
@@ -36,34 +37,35 @@ public class SaveStatement extends Statement<SaveStatement> {
             UUID siteId, String apiKey, String cookie)
             throws AlreadyExecutedException, StatementExecutionException {
         
-        setRequestMethod(HttpMethod.PUT);
         setRequestBody(attribVals);
         return super.execute(baseApiUri, customerId, siteId, apiKey, cookie);
     }
     
     @Override
-    public final SaveStatement withParam(String attrib, Object val)
+    public final SaveStatement withParam(String param, Object val)
             throws AlreadyExecutedException, StatementParamException {
         
         if(isExecuted()) {
             throw new AlreadyExecutedException("Statement already executed.");
         }
         
-        if(resource.getAllSettableAttributeNames().contains(attrib)) {
+        // SaveStatement needs the attribute params in request body
+        if(resource.getAllSettableAttributeNames().contains(param)) {
             if(attribVals == null) {
                 attribVals = new HashMap();
             }
-            attribVals.put(attrib, val);
+            attribVals.put(param, val);
         } else {
-            super.withParam(attrib, val);
+            super.withParam(param, val);
         }
         return this;
     }
     
     @Override
-    public final SaveStatement withParams(Map<String, Object> attribs) throws AlreadyExecutedException, StatementParamException {
+    public final SaveStatement withParams(Map<String, Object> params)
+            throws AlreadyExecutedException, StatementParamException {
         
-        attribs.forEach((a,v) -> withParam(a, v));
+        params.forEach((a,v) -> withParam(a, v));
         return this;
     }
     
