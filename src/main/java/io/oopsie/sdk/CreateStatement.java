@@ -27,6 +27,7 @@ public class CreateStatement extends Statement<CreateStatement> {
      */
     CreateStatement(Resource resource) {
         super(resource);
+        setRequestMethod(HttpMethod.POST);
     }
    
     @Override
@@ -34,7 +35,6 @@ public class CreateStatement extends Statement<CreateStatement> {
             UUID siteId, String apiKey, String cookie)
             throws AlreadyExecutedException, StatementExecutionException {
         
-        setRequestMethod(HttpMethod.POST);
         setRequestBody(attribVals);
         return super.execute(baseApiUri, customerId, siteId, apiKey, cookie);
     }

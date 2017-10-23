@@ -23,6 +23,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -229,7 +230,10 @@ public class Site {
     }
     
     /**
-     * Executes the passed in {@link Statement}. 
+     * Executes the passed in {@link Statement}. Any result returned can also be fetched by calling
+     * {@link Statement#getResult() }. If execution fails due to
+     * an error thrown from the remote site API and no {@link ResultSet} was 
+     * produced then {@link Statement#isExecuted() } will return false.
      * 
      * @param statement the {@link Statement} to execute
      * @return the {@link ResultSet}
@@ -293,10 +297,44 @@ public class Site {
     }
     
     /**
-     * Logging in using passed in {@link User}.
-     * @param user the user to login 
+     * Register a new user in this Site.
+     * @param userRequest user request info.
+     * @throws StatementExecutionException if registration failed.
      */
-    public void login(User user) throws SevereUserException {
+    public void register(UserRequest userRequest) throws StatementExecutionException {
+        String regURI = String.join("", apiUri.toString(), "/users/register");
+        
+        HttpHeaders regHeaders = new HttpHeaders();
+        regHeaders.set("oopsie-customer-id", customerId.toString());
+        regHeaders.set("oopsie-site-id", siteId.toString());
+        
+        HttpEntity regEntity =  new HttpEntity(userRequest, regHeaders);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity response = null;
+        try {
+            
+            response = restTemplate.exchange(
+                    regURI,
+                    HttpMethod.POST,
+                    regEntity,
+                    String.class);
+            
+        } catch(Exception ex) {
+            if(ex instanceof HttpClientErrorException) {
+                String body = ((HttpClientErrorException)ex).getResponseBodyAsString();
+                throw new StatementExecutionException(((HttpClientErrorException) ex).getMessage() + ", " + body);
+            } else {
+                throw new StatementExecutionException("Severe: " + ex.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Logging in using passed in {@link UserCredentials}.
+     * @param user the user to login 
+     * @throws StatementExecutionException if login failed.
+     */
+    public void login(UserCredentials user) throws StatementExecutionException {
         
         String loginURI = String.join("",
                 apiUri.toString(),
@@ -318,7 +356,12 @@ public class Site {
                     String.class);
             
         } catch(Exception ex) {
-            throw new SevereUserException("Severe: " + ex.getMessage());
+            if(ex instanceof HttpClientErrorException) {
+                String body = ((HttpClientErrorException)ex).getResponseBodyAsString();
+                throw new StatementExecutionException(((HttpClientErrorException) ex).getMessage() + ", " + body);
+            } else {
+                throw new StatementExecutionException("Severe: " + ex.getMessage());
+            }
         }
         
         List<String> cookies = response.getHeaders().get("Set-Cookie");
@@ -328,6 +371,8 @@ public class Site {
     
     /**
      * Logging out current user session.
+     * 
+     * @throws StatementExecutionException if logout failed.
      */
     public void logout() throws StatementExecutionException {
         String loginURI = String.join("",
@@ -350,7 +395,12 @@ public class Site {
                     String.class);
             
         } catch(Exception ex) {
-            throw new SevereUserException("Severe: " + ex.getMessage());
+            if(ex instanceof HttpClientErrorException) {
+                String body = ((HttpClientErrorException)ex).getResponseBodyAsString();
+                throw new StatementExecutionException(((HttpClientErrorException) ex).getMessage() + ", " + body);
+            } else {
+                throw new StatementExecutionException("Severe: " + ex.getMessage());
+            }
         }
         this.authCookie = null;
         this.refreshAuthCookie = null;
