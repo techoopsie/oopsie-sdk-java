@@ -13,7 +13,7 @@ public enum DataType {
     COLLECTION_SET("Set"),
     COLLECTION_LIST("List"),
     COLLECTION_MAP("Map"),
-    TUPLE("Tuple"),
+    //TUPLE("Tuple"),
     EXPAND("Expand"),
     UNDEFINED("Undefined");
     
