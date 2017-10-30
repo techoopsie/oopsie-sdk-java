@@ -1,6 +1,5 @@
 package io.oopsie.sdk;
 
-import io.oopsie.sdk.error.SevereUserException;
 import io.oopsie.sdk.error.AlreadyExecutedException;
 import io.oopsie.sdk.error.ApiURIException;
 import io.oopsie.sdk.error.StatementExecutionException;
@@ -246,7 +245,7 @@ public class Site {
         if(!initialized) {
             throw new SiteInitializationException("Site not initialized.");
         }
-        return statement.execute(apiUri, customerId, siteId, apiKey, authCookie);
+        return statement.execute(apiUri, customerId, siteId, apiKey, authCookie, refreshAuthCookie);
     }
     
     /**
@@ -264,7 +263,8 @@ public class Site {
         if(!initialized) {
             throw new SiteInitializationException("Site not initialized.");
         }
-        return cachedThreadPool.submit(() -> statement.execute(apiUri, customerId, siteId, apiKey, authCookie));
+        return cachedThreadPool.submit(() -> statement.execute(apiUri, customerId, siteId,
+                apiKey, authCookie,refreshAuthCookie));
     }
     
     /**
@@ -383,6 +383,7 @@ public class Site {
         logoutHeaders.set("oopsie-customer-id", customerId.toString());
         logoutHeaders.set("oopsie-site-id", siteId.toString());
         logoutHeaders.add("Cookie", authCookie);
+        logoutHeaders.add("Cookie", refreshAuthCookie);
         
         HttpEntity logoutEntity =  new HttpEntity(null, logoutHeaders);
         RestTemplate restTemplate = new RestTemplate();
@@ -404,6 +405,41 @@ public class Site {
         }
         this.authCookie = null;
         this.refreshAuthCookie = null;
+    }
+    
+    public void refresh() throws StatementExecutionException {
+        String loginURI = String.join("",
+                apiUri.toString(),
+                "/users/refresh");
+        
+        HttpHeaders refreshHeaders = new HttpHeaders();
+        refreshHeaders.set("oopsie-customer-id", customerId.toString());
+        refreshHeaders.set("oopsie-site-id", siteId.toString());
+        refreshHeaders.add("Cookie", refreshAuthCookie);
+        
+        HttpEntity refreshEntity =  new HttpEntity(null, refreshHeaders);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity response = null;
+        try {
+            
+            response = restTemplate.exchange(
+                    loginURI,
+                    HttpMethod.POST,
+                    refreshEntity,
+                    String.class);
+            
+        } catch(Exception ex) {
+            if(ex instanceof HttpClientErrorException) {
+                String body = ((HttpClientErrorException)ex).getResponseBodyAsString();
+                throw new StatementExecutionException(((HttpClientErrorException) ex).getMessage() + ", " + body);
+            } else {
+                throw new StatementExecutionException("Severe: " + ex.getMessage());
+            }
+        }
+        
+        List<String> cookies = response.getHeaders().get("Set-Cookie");
+        this.authCookie= cookies.get(0);
+        this.refreshAuthCookie = cookies.get(1);
     }
     
     /**
