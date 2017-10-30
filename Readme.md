@@ -2,9 +2,9 @@
 
 ## OOPSIE Java SDK
 
-Create backends with no coding using [OOPSIE Cloud](https://oopsie.io) suitable for all types of applications. What makes oopsie stand out is that it makes your applications Big Data enabled from the beginning. This means that your app ambitions can be very high and you don't have to bother about complex coding for distributed server instrustructures, handle tens of thousands of api request and manage terabyte of data, oopsie scales with your business strategy.
+Create backends with no coding using [OOPSIE Cloud](https://oopsie.io) suitable for all types of applications. What makes oopsie stand out is that it makes your applications Big Data enabled from the beginning. This means that your app ambitions can be very high and you don't have to bother about complex coding for distributed server insfrustructures, handle tens of thousands of api request and manage terabyte of data, oopsie scales with your business strategy.
 
-###"No idea is too small for a big world!"
+#### "No idea is too small for a big world!"
 
 With the SDK your java oopsie clients (or java backends for that matter) connects to the [OOPSIE Cloud](https://oopsie.io) and makes it a breeze to work on your java projects without bothering about all the hassles that comes with backend implemantations and maintenance.
 
