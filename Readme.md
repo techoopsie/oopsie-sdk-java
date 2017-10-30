@@ -28,7 +28,7 @@ With an [oopsie](https://oopsie.io) site, created and deployed with no coding at
 
 ### Initialize site
 
-```Java
+```
     Site librarySite = new Site(apiUrl, customerId, siteId, apiKey);
     librarySite.init();
     
@@ -38,7 +38,7 @@ With an [oopsie](https://oopsie.io) site, created and deployed with no coding at
 
 ### Choose app and resource
 
-```Java
+```
     Application bookApp = librarySite.getApplication("BookApp");
     Resource bookRes = bookApp.getResource("Book");
     
@@ -48,7 +48,7 @@ With an [oopsie](https://oopsie.io) site, created and deployed with no coding at
 
 ### Create entity
 
-```Java
+```
 	Statement stmnt = bookRes.create()
 		.withParam("Title", "The Master and Margarita")
     		.withParam("Author", "bulgakov, mikhail");
@@ -61,7 +61,7 @@ With an [oopsie](https://oopsie.io) site, created and deployed with no coding at
 ```
 
 ### Get entity
-```Java
+```
 	stmnt = bookRes.get().withParam("eid", bookId);
 	ResultSet result = librarySite.execute(stmnt);
 	String author = result.one().getString("Author");
@@ -71,7 +71,7 @@ With an [oopsie](https://oopsie.io) site, created and deployed with no coding at
 ```
 
 ### Save entity
-```Java
+```
 	Map<String, Object> params = new HashMap();
 	params.put("eid", bookId);
 	params.put("Title", "The Master and Margarita");
