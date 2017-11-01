@@ -145,7 +145,6 @@ public abstract class Statement<T extends Statement> {
         this.queryparams = null;
         this.result = null;
         this.requestBody = null;
-        this.requestMethod = null;
         this.executed = false;
     }
     
@@ -193,7 +192,8 @@ public abstract class Statement<T extends Statement> {
         this.queryparams = queryparams;
     }
     
-    protected ResultSet execute(URI requestBaseApiUri, UUID customerId, UUID siteId, String apiKey, String authCookie)
+    protected ResultSet execute(URI requestBaseApiUri, UUID customerId, UUID siteId, String apiKey,
+            String authCookie,  String refreshAuthCookie)
             throws AlreadyExecutedException, StatementExecutionException {
         
         if(isExecuted()) {
@@ -217,6 +217,7 @@ public abstract class Statement<T extends Statement> {
         headers.set("oopsie-site-id", siteId.toString());
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         headers.add("Cookie", authCookie);
+        headers.add("Cookie", refreshAuthCookie);
         if(apiKey != null) {
             headers.set("Authorization", apiKey);
         }

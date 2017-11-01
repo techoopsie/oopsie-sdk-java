@@ -32,11 +32,11 @@ public class CreateStatement extends Statement<CreateStatement> {
    
     @Override
     protected synchronized final ResultSet execute(URI baseApiUri, UUID customerId,
-            UUID siteId, String apiKey, String cookie)
+            UUID siteId, String apiKey, String cookie, String refreshCookie)
             throws AlreadyExecutedException, StatementExecutionException {
         
         setRequestBody(attribVals);
-        return super.execute(baseApiUri, customerId, siteId, apiKey, cookie);
+        return super.execute(baseApiUri, customerId, siteId, apiKey, cookie, refreshCookie);
     }
     
     @Override
