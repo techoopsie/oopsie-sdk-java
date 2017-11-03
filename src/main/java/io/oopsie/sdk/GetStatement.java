@@ -1,6 +1,7 @@
 package io.oopsie.sdk;
 
 import io.oopsie.sdk.error.AlreadyExecutedException;
+import io.oopsie.sdk.error.StatementExecutionException;
 import io.oopsie.sdk.error.StatementParamException;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,7 +28,44 @@ public class GetStatement extends Statement<GetStatement> {
         extraParams.add("_limit");
         extraParams.add("_expandRelations");
         extraParams.add("_audit");
+        extraParams.add("pageState");
         setExtraParams(extraParams);
+    }
+    
+    /**
+     * Returns next page of this statement. The result of the last page is empty.
+     * @return the next page.
+     */
+    public final GetStatement nextPage() {
+        
+        if(getPageState() == null) {
+            throw new StatementExecutionException("No more pages to fetch");
+        }
+        return page(pageState);
+    }
+    
+    /**
+     * Fetches a certain page by passing in a pageState. Passing in null is the same as
+     * getting the first page. The result of the last page is empty.
+     * @param pageState
+     * @return this statement
+     */
+    public final GetStatement page(String pageState) {
+        executed = false;
+        return withParam("pageState", pageState);
+    }
+    
+    /**
+     * The page state of the statment. If not null use this to fetch next page
+     * or store it to fetch the page for later use. Might return null, which
+     * means there are no more pages to fetch.
+     * 
+     * @see #page(java.lang.String) 
+     * @see #nextPage() 
+     * @return current pageState or null
+     */
+    public final String getPageState() {
+        return pageState;
     }
 
     /**
