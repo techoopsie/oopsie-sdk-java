@@ -34,8 +34,9 @@ public abstract class Statement<T extends Statement> {
     private HttpMethod requestMethod;
     private Object requestBody;
     private Map<String, Object> queryparams; 
-    private boolean executed;
+    protected boolean executed;
     private ResultSet result;
+    protected String pageState;
 
     /**
      * Creates a new Statement for specified {@link Resource}.
@@ -146,6 +147,7 @@ public abstract class Statement<T extends Statement> {
         this.result = null;
         this.requestBody = null;
         this.executed = false;
+        this.pageState = null;
     }
     
     /**
@@ -253,13 +255,11 @@ public abstract class Statement<T extends Statement> {
             data.add(responseBody);
             this.result = new ResultSet(this, true, data);
         }
-        
-        // include all 200's as accepted
-        if(response.getStatusCodeValue() > 299) {
-            throw new StatementExecutionException("Could not initialize OopsieSite object. "
-            + response.getStatusCode().getReasonPhrase());
+        if(responseBody.get("metadata") != null) {
+            Map<String, Object> metaData = (Map)responseBody.get("metadata");
+            pageState = metaData.get("pageState") != null ? metaData.get("pageState").toString() : null;
         }
-        this.executed = true;
-        return this.result;
+        executed = true;
+        return result;
     }
 }
