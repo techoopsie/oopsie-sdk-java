@@ -255,7 +255,7 @@ public abstract class Statement<T extends Statement> {
             data.add(responseBody);
             this.result = new ResultSet(this, true, data);
         }
-        if(responseBody.get("metadata") != null) {
+        if(responseBody != null && responseBody.get("metadata") != null) {
             Map<String, Object> metaData = (Map)responseBody.get("metadata");
             pageState = metaData.get("pageState") != null ? metaData.get("pageState").toString() : null;
         }

@@ -14,7 +14,7 @@ With the SDK your java oopsie clients (or java backends for that matter) connect
 	<dependency>
 		<groupId>io.oopsie</groupId>
   		<artifactId>oopsie-sdk-java</artifactId>
-  		<version>1.0-RC2</version>
+  		<version>1.0-RC5</version>
 	</dependency>
 	
 ## Example
