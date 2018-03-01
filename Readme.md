@@ -1,5 +1,6 @@
 <img src="http://static1.squarespace.com/static/57ecb47344024301f57bc8fa/t/598852628419c22ddf382d9d/1502513980501/?format=1500w" alt="Oopsie" style="width: 200px;"/>
 
+# USE THE RELEASE RC 5 NO OTHER BRANCH/TAG/RELEASE WILL WORK WITH CURRENT DEPLOYMENT OF OOPSIE!
 ## OOPSIE Java SDK
 
 Create backends with no coding using [OOPSIE Cloud](https://oopsie.io) suitable for all types of applications. What makes oopsie stand out is that it makes your applications Big Data enabled from the beginning. This means that your app ambitions can be very high and you don't have to bother about complex coding for distributed server insfrustructures, handle tens of thousands of api request and manage terabyte of data, oopsie scales with your business strategy.
