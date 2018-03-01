@@ -1,7 +1,6 @@
 package io.oopsie.sdk;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.UUID;
 
 public class View {
@@ -60,7 +59,7 @@ public class View {
     }
     
     /**
-     * Retuns the view's "primary key" i.e. an ordered map of this view's
+     * Retuns the view's "primary key", i.e. an ordered map of this view's
      * partition keys (if any) and clustering keys (at least one).
      * @return the view's primary key
      * @see #getPartitionKeys() 

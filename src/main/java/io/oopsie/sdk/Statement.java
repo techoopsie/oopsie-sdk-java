@@ -114,8 +114,8 @@ public abstract class Statement<T extends Statement> {
     }
 
     /**
-     * Set any statement params used by sub statements to be allowed to be
-     * set when calling {@link #withParam(java.lang.String, java.lang.Object) }
+     * Set any sub statement params that can be
+     * used when calling {@link #withParam(java.lang.String, java.lang.Object) }
      * and {@link #withParams(java.util.Map) }
      * @param statementParams set of param names
      */
@@ -124,16 +124,18 @@ public abstract class Statement<T extends Statement> {
     }
     
     /**
-     * 
-     * @return 
+     * Returns all statement params set by sub statements that can be
+     * used when calling {@link #withParam(java.lang.String, java.lang.Object) }
+     * and {@link #withParams(java.util.Map) }
+     * @return all sub statement params
      */
     protected Set<String> getStatementParams() {
         return statementParams;
     }
  
     /**
-     * Return true if statement's execution iwll inlcude "pageState" query param.
-     * @return trye if using pagState
+     * Returns true if statement's execution will inlcude "pageState" query param.
+     * @return true if using pageState
      */
     final boolean isUsingPageState() {
         return queryparams != null && queryparams.containsKey("pageState");
