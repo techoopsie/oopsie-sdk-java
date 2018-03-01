@@ -19,24 +19,27 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * A Statement is the executional definition for a specific {@link Resource} 
- * @author nicolas
  * @param <T> sub type
  */
 public abstract class Statement<T extends Statement> {
     
-    protected final Resource resource;
-    private Set<String> extraParams;
-    private HttpMethod requestMethod;
     private Object requestBody;
     private Map<String, Object> queryparams; 
     protected boolean executed;
     private ResultSet result;
     protected String pageState;
+    
+    // these fields are never called from reset method
+    protected final Resource resource;
+    private Set<String> statementParams;
+    private String view;
+    private HttpMethod requestMethod;
 
     /**
      * Creates a new Statement for specified {@link Resource}.
@@ -94,9 +97,9 @@ public abstract class Statement<T extends Statement> {
     private void validateParamName(String name) throws StatementParamException {
         
         Set<String> allParams = new HashSet();
-        allParams.addAll(resource.getAllAttributeNames());
-        if(extraParams != null) {
-            allParams.addAll(extraParams);
+        allParams.addAll(resource.getAttributeNames());
+        if(statementParams != null) {
+            allParams.addAll(statementParams);
         }
                 
         if(!allParams.contains(
@@ -105,17 +108,36 @@ public abstract class Statement<T extends Statement> {
                     + " Only use attributes of current resource and statement.");
         }
     }
+    
+    protected void setView(String view) {
+        this.view = view;
+    }
 
     /**
-     * Set any extra params used by sub statements to be allowed to be
+     * Set any statement params used by sub statements to be allowed to be
      * set when calling {@link #withParam(java.lang.String, java.lang.Object) }
      * and {@link #withParams(java.util.Map) }
      * @param statementParams set of param names
      */
-    protected void setExtraParams(Set<String> statementParams) {
-        this.extraParams = statementParams;
+    protected void setStatementParams(Set<String> statementParams) {
+        this.statementParams = statementParams;
     }
-
+    
+    /**
+     * 
+     * @return 
+     */
+    protected Set<String> getStatementParams() {
+        return statementParams;
+    }
+ 
+    /**
+     * Return true if statement's execution iwll inlcude "pageState" query param.
+     * @return trye if using pagState
+     */
+    final boolean isUsingPageState() {
+        return queryparams != null && queryparams.containsKey("pageState");
+    }
     
     /**
      * Ruturns true if this {@link Statement} is executed.
@@ -148,6 +170,10 @@ public abstract class Statement<T extends Statement> {
         this.requestBody = null;
         this.executed = false;
         this.pageState = null;
+        // resource should not be reset
+        // requestMethod should not be reset
+        // statementParams should not be reset
+        // view should not be reset
     }
     
     /**
@@ -202,10 +228,15 @@ public abstract class Statement<T extends Statement> {
             throw new AlreadyExecutedException("Statement already executed.");
         }
         
+        String viewPart = "";
+        if(resource.getViewNames().contains(view)) {
+            viewPart = "/views/" + view;
+        }
         String baseURI = String.join("",
                 requestBaseApiUri.toString(),
                 "/resources/",
-                resource.getResourceId().toString()
+                resource.getResourceId().toString(),
+                viewPart
                 );
         
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(baseURI);
@@ -241,6 +272,9 @@ public abstract class Statement<T extends Statement> {
             if(ex instanceof HttpClientErrorException) {
                 String body = ((HttpClientErrorException)ex).getResponseBodyAsString();
                 throw new StatementExecutionException(((HttpClientErrorException) ex).getMessage() + ", " + body);
+            } else if(ex instanceof HttpServerErrorException) {
+                String body = ((HttpServerErrorException)ex).getResponseBodyAsString();
+                throw new StatementExecutionException(((HttpServerErrorException) ex).getMessage() + ", " + body);
             } else {
                 throw new StatementExecutionException("Severe: " + ex.getMessage());
             }

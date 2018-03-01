@@ -263,6 +263,10 @@ public class Site {
         if(!initialized) {
             throw new SiteInitializationException("Site not initialized.");
         }
+        
+        if(statement.isUsingPageState()) {
+            throw new SiteInitializationException("Asynchronous execution with page state not supported.");
+        }
         return cachedThreadPool.submit(() -> statement.execute(apiUri, customerId, siteId,
                 apiKey, authCookie,refreshAuthCookie));
     }

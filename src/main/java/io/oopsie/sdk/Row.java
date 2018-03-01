@@ -1,7 +1,9 @@
 package io.oopsie.sdk;
 
+import com.google.common.collect.Maps;
 import io.oopsie.sdk.error.DataTypeException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -197,6 +199,23 @@ public class Row {
     }
     
     /**
+     * Returns the tuple value for name as List.
+     * 
+     * @param name the name of the row column
+     * @return valus as List
+     * @throws DataTypeException if not able to cast to List
+     * @throws IllegalArgumentException if name is not part of this row
+     */
+    public List getTuple(String name) throws DataTypeException, IllegalArgumentException {
+        checkNameAndType(name, DataType.TUPLE);
+        Object val = row.get(name);
+        if(val == null) {
+            return null;
+        }
+        return (List)val;
+    }
+    
+    /**
      * Returns the value for name as UUID.
      * 
      * @param name the name of the row column
@@ -214,23 +233,6 @@ public class Row {
     }
     
     /**
-     * Returns the primary key of the relation resource rentity. A map with
-     * PK attribute names mapped to their values.
-     * @param name the name of the row column
-     * @return a relation map
-     * @throws DataTypeException if not able to cast to Map
-     * @throws IllegalArgumentException if name is not part of this row
-     */
-    public Map<String, Object> getRelation(String name) throws DataTypeException, IllegalArgumentException {
-        checkNameAndType(name, DataType.RELATION);
-        Object val = row.get(name);
-        if(val == null) {
-            return null;
-        }
-        return (Map)val;
-    }
-    
-    /**
      * Returns the meta data for the specified row column.
      * @param name the name of the column
      * @return row column meta data
@@ -241,7 +243,7 @@ public class Row {
     
     
     private boolean isNameValid(String name) throws IllegalArgumentException {
-        return (columnMetas.keySet().contains(name) || columnMetas.keySet().contains(name.substring(0, name.lastIndexOf("_data"))));
+        return columnMetas.keySet().contains(name);
     }
     
     private void checkNameAndType(String name, DataType expected) {
@@ -257,6 +259,19 @@ public class Row {
                             + expected.getHumanName() + ".");
         }
     }
+    
+    /**
+     * Returns a map of all values mapped to their attribute namnes useful for
+     * in conjuction with {@link SaveStatement#withParams(java.util.Map)} when only changing
+     * a few of the {@link Resource} entity's values before saving the data. As
+     * of now only HTTP PUT (updating all) values is supported. In the future
+     * a we will support HHTP PATCH, i.e. updating an entity partitially without
+     * having to sewt all values when calling save.
+     * @return a map will all values mapped to their attribute names.
+     */
+    public Map<String, Object> getAsParams() {
+        return new HashMap(row);
+    }
 
     /**
      * Prints out the row columns and their values.
@@ -265,9 +280,9 @@ public class Row {
     @Override
     public String toString() {
         String string = "";
-        for(String col : row.keySet()) {
+        for(String col : columnMetas.keySet()) {
             String val = row.get(col) != null ? row.get(col).toString() : "null";
-            string = String.join("", string, col, "=", val , "\t");
+            string = String.join("", string, col, "=", val , "\n");
         }
         return string;
     }

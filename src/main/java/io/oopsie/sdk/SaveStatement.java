@@ -7,14 +7,10 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Future;
 import org.springframework.http.HttpMethod;
 
 /**
  * Use this class to save persisted ( HTTP POST) entities for a {@link Resource}.
- * Instances of this class are thread safe and can
- * be uses with Site.executeAsync(...)
- * to produce a {@link Future} to fetch related {@link ResultSet}.
  */
 public class SaveStatement extends Statement<SaveStatement> {
 

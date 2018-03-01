@@ -1,23 +1,25 @@
 package io.oopsie.sdk;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
- * A handle to a specific resource defined in an OOPSIE CLoud {@link Site}.
+ * A handle to a specific resource defined in an OOPSIE Cloud {@link Site}.
  */
 public class Resource {
 
     private final UUID resourceId;
     private final String name;
-    private final Map<String, RegularAttribute> attributes;
-    private final Map<String, PartitionKey> partitionKeys;
-    private final Map<String, ClusterKey> clusterKeys;
+    private final Map<String, Attribute> attributes;
     private final Map<String, View> views;
     private final Map<String, Auth> auths;
+    private final boolean authEnabled;
 
     /**
      * 
@@ -32,19 +34,17 @@ public class Resource {
     Resource(
             UUID resourceId,
             String name,
-            Map<String, RegularAttribute> attributes,
-            Map<String, PartitionKey> partitionKeys,
-            Map<String, ClusterKey> clusterKeys,
+            Map<String, Attribute> attributes,
             Map<String, View> views,
-            Map<String, Auth> auths) {
+            Map<String, Auth> auths,
+            boolean authEnabled) {
 
         this.resourceId = resourceId;
         this.name = name;
         this.attributes = attributes;
-        this.partitionKeys = partitionKeys;
-        this.clusterKeys = clusterKeys;
         this.views = views;
         this.auths = auths;
+        this.authEnabled = authEnabled;
     }
 
     
@@ -57,6 +57,14 @@ public class Resource {
     }
 
     /**
+     * Returnsd true if auth is enabled on this Resource
+     * @return true if auth enabled
+     */
+    public boolean isAuthEnabled() {
+        return authEnabled;
+    }
+
+    /**
      * Returns the resource name.
      * @return a name
      */
@@ -64,70 +72,6 @@ public class Resource {
         return name;
     }
     
-    /**
-     * Returns all attributes names including partition
-     * and clustering attributes. This method includes oopsie system
-     * attribute names.
-     *
-     * @return all attribute names
-     */
-    public final Set<String> getAllAttributeNames() {
-        Set<String> all = new HashSet();
-        all.addAll(getAttributeNames());
-        all.addAll(getPartitionKeyNames());
-        all.addAll(getClusterKeyNames());
-        return Collections.unmodifiableSet(all);
-    }
-    
-    /**
-     * Returns all attribute names that are 
-     * either partition or clustering attribute.This method includes oopsie system
-     * attribute names.
-     * 
-     * @return all primary key attributes
-     */
-    public final Set<String> getPrimaryKeyNames() {
-        Set<String> all = new HashSet();
-        all.addAll(getPartitionKeyNames());
-        all.addAll(getClusterKeyNames());
-        return Collections.unmodifiableSet(all);
-    }
-    
-    /**
-     * Returns all settable attribute names that are 
-     * either partition or clustering attribute.This method excludes oopsie system
-     * attribute names, but includes "eid".
-     * 
-     * @return all settable primary key attributes
-     */
-    public final Set<String> getSettablePrimaryKeyNames() {
-        Set<String> all = new HashSet();
-        all.addAll(getPartitionKeyNames());
-        all.addAll(getClusterKeyNames());
-        all.remove("cid");
-        return Collections.unmodifiableSet(all);
-    }
-    
-    /**
-     * Returns all settable attributes names including partition
-     * and clustering attributes. This method excludes oopsie system
-     * attribute names, but includes "eid".
-     *
-     * @return all settable attribute names
-     */
-    public final Set<String> getAllSettableAttributeNames() {
-        Set<String> all = new HashSet();
-        all.addAll(getAttributeNames());
-        all.addAll(getPartitionKeyNames());
-        all.addAll(getClusterKeyNames());
-        all.remove("cid");
-        all.remove("cra");
-        all.remove("crb");
-        all.remove("cha");
-        all.remove("chb");
-        return Collections.unmodifiableSet(all);
-    }
-
     /**
      * Returns all regular attributes.
      *
@@ -137,61 +81,74 @@ public class Resource {
         return Collections.unmodifiableSet(attributes.keySet());
     }
     
-    /**
-     * Returns all regular attributes.
-     * @return regular attributes
-     */
-    public final Map<String, RegularAttribute> getRegularAttributes() {
-        return Collections.unmodifiableMap(attributes);
-    }
-
-    /**
-     * Returns all available partition keys including
-     * non settable oopsie system partition keys.
-     *
-     * @return  all partition key names
-     */
-    public final Set<String> getPartitionKeyNames() {
-        return Collections.unmodifiableSet(partitionKeys.keySet());
+    public Set<String> getAllSettableAttributeNames() {
+        
+        List<Attribute> settableAttribs = attributes.values().stream().filter(a -> 
+                !a.getName().equalsIgnoreCase("id")
+                ||
+                !a.getType().equals(DataType.CHANGED_AT)
+                ||
+                !a.getType().equals(DataType.CHANGED_BY)
+                ||
+                !a.getType().equals(DataType.CREATED_AT)
+                ||
+                !a.getType().equals(DataType.CREATED_BY)).collect(Collectors.toList());
+        
+        return settableAttribs.stream().map(a -> a.getName()).collect(Collectors.toSet());
     }
     
     /**
-     * Returns all Partition keys.
-     * @return partition keys.
+     * Retuns the "primary key" for the primary view, i.e. an ordered map of this view's
+     * partition keys (if any) and clustering keys (at least one).
+     * @return the primary view's primary key
+     * @see #getPrimaryView()
      */
-    public final Map<String, PartitionKey> getPartitionKeys() {
-        return Collections.unmodifiableMap(partitionKeys);
-    }
-
-    /**
-     * Returns  all available cluster keys including
-     * non settable oopsie system clustering keys.
-     *
-     * @return  all cluster key names
-     */
-    public final Set<String> getClusterKeyNames() {
-        return Collections.unmodifiableSet(clusterKeys.keySet());
+    public LinkedHashMap<String, Attribute> getPrimaryKey() {
+        return getPrimaryView().getPrimaryKey();
     }
     
     /**
-     * Returns the cluster keys.
-     * @return cluster keys
+     * Returns the primary view.
+     * @return the primary view
      */
-    public Map<String, ClusterKey> getClusterKeys() {
-        return Collections.unmodifiableMap(clusterKeys);
+    public View getPrimaryView() {
+        return views.values().stream().filter(view -> view.isPrimary()).findAny().get();
+    }
+    
+    /**
+     * Returns the name of the primary view.
+     * @return the primary view name
+     */
+    public final String getPrimaryViewName() {
+        return views.values().stream().filter(view -> view.isPrimary()).findAny().get().getName();
     }
 
     /**
-     * Returns all available views.
-     *
+     * Returns a collection of all {@link View}s configured on this Resource.
+     * @return a collection of Views.
+     */
+    public Collection<View> getViews() {
+        return Collections.unmodifiableCollection(views.values());
+    }
+    
+    /**
+     * Returns all view names.
      * @return all of view names
      */
     public final Set<String> getViewNames() {
         return Collections.unmodifiableSet(views.keySet());
     }
-
+    
     /**
-     * Returns all auth names for this {@link Resource}.
+     * Returns a collection of all {@link Auth}s configured on this Resource.
+     * @return a collection of Auths.
+     */
+    public Collection<Auth> getAuths() {
+        return Collections.unmodifiableCollection(auths.values());
+    }
+    
+    /**
+     * Returns all auth names.
      *
      * @return auths
      */
@@ -206,17 +163,7 @@ public class Resource {
      */
     public Attribute getAttribute(String name) {
         
-        Attribute attrib = this.attributes.get(name);
-        if(attrib != null) {
-            return attrib;
-        }
-        
-        attrib = clusterKeys.get(name);
-        if(attrib != null) {
-            return attrib;
-        }
-        
-        return this.partitionKeys.get(name);
+        return this.attributes.get(name);
     }
 
     /**
@@ -244,16 +191,35 @@ public class Resource {
     
     /**
      * Returns a {@link GetStatement}. Executing the statement as is will
-     * fetch all resource entitities, limited by fetch size. You need to set
+     * fetch all resource entitities, limited by fetch size, using the primary view. You need to set
      * the specific reource enitity's primary key params to fetch a specific
-     * entity.
+     * entity. If any preceeding PK param is missing the GET API will will resolve the correct
+     * query by using passed in PK params. The GetStatement returned from this method will be same as calling
+     * {@link #get(java.lang.String)} with the Resource's primary view name.
      * 
      * @return a {@link GetStatement}
      * @see GetStatement#withParam(java.lang.String, java.lang.Object)
      * @see GetStatement#withParams(java.util.Map) 
+     * @see #get(java.lang.String) 
      */
     public GetStatement get() {
         return new GetStatement(this);
+    }
+    
+    /**
+     * Returns a {@link GetStatement} for named {@link View}. Executing the statement as is will
+     * fetch all resource entitities from the resource view, limited by fetch size. You need to set
+     * the specific view enitity's primary key params to fetch a specific entity. If any
+     * preceeding PK param is missing the GET API will will resolve the correct
+     * query by using passed in PK params.
+     * 
+     * @param view the view name
+     * @return a {@link GetStatement}
+     * @see GetStatement#withParam(java.lang.String, java.lang.Object)
+     * @see GetStatement#withParams(java.util.Map)
+     */
+    public GetStatement get(String view) {
+        return new GetStatement(this, view);
     }
     
     /**
