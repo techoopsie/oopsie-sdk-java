@@ -62,30 +62,32 @@ class InitParser {
         Map<String, Attribute> parsedAttributes = new LinkedHashMap();
         attributes.forEach((Map attribute) -> {
             
-                String idVal = (String)attribute.get("id");
-                UUID id = UUID.fromString(idVal);
                 String name = (String)attribute.get("name");
-                DataType type = DataType.valueOf((String)attribute.get("type"));
-                List<Map<String, Object>> collTypesList = (List)attribute.get("collectionTypes");
-                List<CollectionType> collectionTypes = new ArrayList();
-                if(collTypesList != null) {
-                    collTypesList.forEach(cl -> {
-                        DataType clType = DataType.valueOf(cl.get("datatype").toString());
-                        Map<String, String> valMap = (Map)cl.get("validation");
-                        Validation validation = null;
-                        if(valMap != null) {
-                            validation = new Validation(Long.valueOf(valMap.get("min")), Long.valueOf(valMap.get("max")));
-                        }
-                        collectionTypes.add(new CollectionType(clType, validation));
-                    });
+                if(!IgnoredType.names().contains(name)) {
+                    String idVal = (String)attribute.get("id");
+                    UUID id = UUID.fromString(idVal);
+                    DataType type = DataType.valueOf((String)attribute.get("type"));
+                    List<Map<String, Object>> collTypesList = (List)attribute.get("collectionTypes");
+                    List<CollectionType> collectionTypes = new ArrayList();
+                    if(collTypesList != null) {
+                        collTypesList.forEach(cl -> {
+                            DataType clType = DataType.valueOf(cl.get("datatype").toString());
+                            Map<String, String> valMap = (Map)cl.get("validation");
+                            Validation validation = null;
+                            if(valMap != null) {
+                                validation = new Validation(Long.valueOf(valMap.get("min")), Long.valueOf(valMap.get("max")));
+                            }
+                            collectionTypes.add(new CollectionType(clType, validation));
+                        });
+                    }
+
+                    Map<String, String> valMap = (Map)attribute.get("validation");
+                    Validation validation = null;
+                    if(valMap != null) {
+                        validation = new Validation(Long.valueOf(valMap.get("min")), Long.valueOf(valMap.get("max")));
+                    }
+                    parsedAttributes.put(name, new Attribute(id, name, type, collectionTypes, validation));
                 }
-                
-                Map<String, String> valMap = (Map)attribute.get("validation");
-                Validation validation = null;
-                if(valMap != null) {
-                    validation = new Validation(Long.valueOf(valMap.get("min")), Long.valueOf(valMap.get("max")));
-                }
-                parsedAttributes.put(name, new Attribute(id, name, type, collectionTypes, validation));
         });
         return parsedAttributes;
     }
