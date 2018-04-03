@@ -103,7 +103,7 @@ class InitParser {
                 String name = (String)partitionKey.get("name");
                 
                 Map<String, Long> valMap = (Map)partitionKey.get("validation");
-                Validation validation = new Validation(valMap.get("min"), valMap.get("max"));
+                Validation validation = valMap != null ? new Validation(valMap.get("min"), valMap.get("max")) : null;
                 
                 DataType type = DataType.valueOf((String)partitionKey.get("type"));
                 
