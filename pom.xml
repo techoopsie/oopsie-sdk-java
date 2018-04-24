@@ -6,7 +6,7 @@
 
     <groupId>io.oopsie</groupId>
     <artifactId>oopsie-sdk-java</artifactId>
-    <version>SNAPSHOT-1.0-RC6</version>
+    <version>1.0-RC6</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>OOPSIE Cloud Java SDK</description>
     <url>https://oopsie.io</url>
@@ -98,7 +98,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
                 <version>1.6</version>
@@ -111,7 +111,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin -->
+            </plugin>
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>

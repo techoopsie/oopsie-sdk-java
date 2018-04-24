@@ -132,6 +132,15 @@ public class Resource {
     }
     
     /**
+     * Returns the {@link View} related to passed in name.
+     * @param name the name of the view
+     * @return the named View
+     */
+    public View getView(String name) {
+        return views.values().stream().filter(view -> view.getName().equals(name)).findAny().get();
+    }
+    
+    /**
      * Returns all view names.
      * @return all of view names
      */
@@ -145,6 +154,15 @@ public class Resource {
      */
     public Collection<Auth> getAuths() {
         return Collections.unmodifiableCollection(auths.values());
+    }
+    
+    /**
+     * Returns the {@link Auth} related to passed in name.
+     * @param name the name of the auth
+     * @return the named Auth
+     */
+    public Auth getAuth(String name) {
+        return auths.values().stream().filter(auth -> auth.getName().equalsIgnoreCase(name)).findAny().get();
     }
     
     /**
