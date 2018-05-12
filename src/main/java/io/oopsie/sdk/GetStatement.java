@@ -83,7 +83,7 @@ public class GetStatement extends Statement<GetStatement> {
     }
 
     /**
-     * Set a new fetch size limit between 0 through 1000. Default is 300. 
+     * Set a new fetch size limit between 0 through 1000. Default is 100. 
      * @param limit the limit
      * @return this {@link GetStatement}
      * @see #reset() 

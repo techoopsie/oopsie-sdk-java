@@ -1,7 +1,7 @@
 package io.oopsie.sdk;
 
-import com.google.common.collect.Maps;
 import io.oopsie.sdk.error.DataTypeException;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -144,7 +144,9 @@ public class Row {
         if(val == null) {
             return null;
         }
-        return new Date((Long)val);
+        Instant instant = Instant.parse(val.toString());
+        Date parsedTimestamp = Date.from(instant);
+        return parsedTimestamp;
     }
     
     /**

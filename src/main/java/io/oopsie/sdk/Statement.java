@@ -7,6 +7,7 @@ import io.oopsie.sdk.error.StatementParamException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -243,7 +244,13 @@ public abstract class Statement<T extends Statement> {
         
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(baseURI);
         if(queryparams != null && !queryparams.isEmpty()) {
-            queryparams.forEach((k,v) -> uriBuilder.queryParam(k, v));
+            queryparams.forEach((k,v) -> {
+                Object val = v;
+                if(val instanceof Date) {
+                    val = ((Date)val).toInstant();
+                }
+                uriBuilder.queryParam(k, val);
+            });
         }
         URI requestUri = uriBuilder.build().encode().toUri();        
         
