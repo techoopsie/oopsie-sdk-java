@@ -8,6 +8,8 @@ Create backends with no coding using [OOPSIE Cloud](https://oopsie.io) suitable 
 
 With the SDK your java oopsie clients (or java backends for that matter) connects to the [OOPSIE Cloud](https://oopsie.io) and makes it a breeze to work on your java projects without bothering about all the hassles that comes with backend implemantations and maintenance.
 
+Looking for [Javascript SDK](https://github.com/techoopsie/oopsie-sdk-js)?
+
 ## Install
 
 ### Maven
@@ -19,7 +21,7 @@ With the SDK your java oopsie clients (or java backends for that matter) connect
 	
 ## Example
 
-With an [oopsie](https://oopsie.io) site, created and deployed with no coding at all using the [dashboard](https://dashboard.oopsie.io), and just a few lines of SDK code in your client you will have your Big Data enabled app up and running in matter of minutes.
+With an [oopsie](https://oopsie.io) site, created and deployed with no coding at all using the [dashboard](https://dashboard-next.oopsie.io), and just a few lines of SDK code in your client you will have your Big Data enabled app up and running in matter of minutes.
 
 ### Prerequisites
 * [Register](https://oopsie.io/create-account) yourself and your company at [oopsie](https://oopsie.io)
