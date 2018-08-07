@@ -5,6 +5,7 @@ import io.oopsie.sdk.error.StatementParamException;
 import io.oopsie.sdk.error.StatementExecutionException;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.http.HttpMethod;
@@ -30,11 +31,11 @@ public class SaveStatement extends Statement<SaveStatement> {
        
     @Override
     protected synchronized final ResultSet execute(URI baseApiUri, UUID customerId,
-            UUID siteId, String apiKey, String cookie, String refreshCookie)
+            UUID siteId, String apiKey, List<String> cookies)
             throws AlreadyExecutedException, StatementExecutionException {
         
         setRequestBody(attribVals);
-        return super.execute(baseApiUri, customerId, siteId, apiKey, cookie, refreshCookie);
+        return super.execute(baseApiUri, customerId, siteId, apiKey, cookies);
     }
     
     @Override

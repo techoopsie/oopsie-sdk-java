@@ -18,24 +18,26 @@ public class GetStatement extends Statement<GetStatement> {
      * @param resource the resource
      */
     GetStatement(Resource resource) {
-        this(resource, resource.getPrimaryViewName());
+        this(resource, resource.getPrimaryView());
     }
     
     /**
-     * Creates a new GetStatement for specified {@link Resource}.
+     * Creates a new GetStatement for specified {@link Resource} and {@link View}.
+     * @param view
      * @param resource the resource
      */
-    GetStatement(Resource resource, String view) {
+    GetStatement(Resource resource, View view) {
         super(resource);
-        if(!resource.getViewNames().contains(view)) {
-            throw new IllegalArgumentException("'" + view + "'" + " is not a view in the passed in resource '" + resource.getName() + "'");
+        if(!resource.getViews().contains(view)) {
+            throw new IllegalArgumentException("'" + view.getName() + "'" 
+                    + " is not a view in the passed in resource '" + resource.getName() + "'");
         }
         setRequestMethod(HttpMethod.GET);
         Set<String> statementParams = new HashSet();
         statementParams.add("_limit");
         statementParams.add("pageState");
         setStatementParams(statementParams);
-        setView(view);
+        setView(view.getName());
     }
     
     /**

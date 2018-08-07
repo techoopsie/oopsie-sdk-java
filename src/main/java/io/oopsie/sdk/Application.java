@@ -1,13 +1,24 @@
 package io.oopsie.sdk;
 
 import io.oopsie.sdk.error.NotFoundInModelException;
+import java.util.stream.Stream;
 
 public class Application {
     
+    private final String name;
     private final Resources resources;
 
-    Application(Resources resources) {
+    Application(String name, Resources resources) {
+        this.name = name;
         this.resources = resources;
+    }
+
+    /**
+     * Returns the name of the Application.
+     * @return app name.
+     */
+    public String getName() {
+        return name;
     }
     
     /**
@@ -19,5 +30,18 @@ public class Application {
      */
     public final Resource getResource(String name) throws NotFoundInModelException {
         return this.resources.getResource(name);
+    }
+
+    /**
+     * Returns the Resources object for this Application
+     * @return Resources object.
+     */
+    public Resources getResources() {
+        return resources;
+    }
+    
+    @Override
+    public String toString() {
+        return name;
     }
 }

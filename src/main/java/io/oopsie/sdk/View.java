@@ -1,6 +1,7 @@
 package io.oopsie.sdk;
 
 import java.util.LinkedHashMap;
+import java.util.Objects;
 import java.util.UUID;
 
 public class View {
@@ -79,6 +80,36 @@ public class View {
      */
     public final boolean isPrimary() {
         return primary;
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 83 * hash + Objects.hashCode(this.id);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final View other = (View) obj;
+        if (!Objects.equals(this.id, other.id)) {
+            return false;
+        }
+        return true;
     }
 
 }

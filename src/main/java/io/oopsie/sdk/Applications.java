@@ -2,6 +2,7 @@ package io.oopsie.sdk;
 
 import io.oopsie.sdk.error.NotFoundInModelException;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Holds all applications for a {@link Site}.
@@ -29,5 +30,13 @@ public class Applications {
             throw new NotFoundInModelException("'" + name + "' not part of this site model.");
         }
         return this.applications.get(name);
+    }
+    
+    /**
+     * Stream representation of this Applications object.
+     * @return a stream of apps.
+     */
+    public final Stream<Application> stream() {
+        return applications.values().stream();
     }
 }

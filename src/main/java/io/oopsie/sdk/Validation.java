@@ -29,4 +29,9 @@ public class Validation {
     public final long getMax() {
         return max;
     }
+
+    @Override
+    public String toString() {
+        return String.join("", "min: ", String.valueOf(min), ", max: ", String.valueOf( max));
+    }
 }

@@ -13,7 +13,6 @@ public enum DataType {
     COLLECTION_LIST("List"),
     COLLECTION_MAP("Map"),
     TUPLE("Tuple"),
-    EXPAND("Expand"),
     CREATED_AT("Created Ay"),
     CREATED_BY("Created By"),
     CHANGED_AT("Changed At"),

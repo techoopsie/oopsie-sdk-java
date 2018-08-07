@@ -37,4 +37,11 @@ public class Auth {
     public final Permission getPermission() {
         return permission;
     }
+
+    @Override
+    public String toString() {
+        return String.join("", name, ": ", permission.name());
+    }
+    
+    
 }

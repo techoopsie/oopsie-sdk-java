@@ -223,8 +223,8 @@ public abstract class Statement<T extends Statement> {
         this.queryparams = queryparams;
     }
     
-    protected ResultSet execute(URI requestBaseApiUri, UUID customerId, UUID siteId, String apiKey,
-            String authCookie,  String refreshAuthCookie)
+    protected ResultSet execute(URI requestBaseApiUri, UUID customerId, UUID siteId,
+            String apiKey, List<String> cookies)
             throws AlreadyExecutedException, StatementExecutionException {
         
         if(isExecuted()) {
@@ -258,9 +258,13 @@ public abstract class Statement<T extends Statement> {
         headers.set("oopsie-customer-id", customerId.toString());
         headers.set("oopsie-site-id", siteId.toString());
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        headers.add("Cookie", authCookie);
-        headers.add("Cookie", refreshAuthCookie);
-        if(apiKey != null) {
+        
+        // Prioritize user cookies API is looking at API KEY first.
+        // If this SDK is used with user login then we want user auth to be used.
+        if(cookies != null) {
+            headers.add("Cookie", cookies.get(0));
+            headers.add("Cookie", cookies.get(1));
+        } else {
             headers.set("Authorization", apiKey);
         }
         HttpEntity httpEntity =  new HttpEntity(requestBody, headers);
