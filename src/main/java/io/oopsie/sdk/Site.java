@@ -35,14 +35,11 @@ public class Site {
     private static final String URI_API_VERSION = "/api/v1";
     
     private ExecutorService cachedThreadPool;
+    private String apiUrl;
     private URI apiUri;
     private UUID customerId;
     private UUID siteId;
     private String apiKey;
-    private String authCookie;
-    private String refreshAuthCookie;
-    //private HttpHeaders headers;
-    //private HttpEntity<String> httpEntity;
     private boolean initialized;
     private Applications applications;
 
@@ -102,6 +99,14 @@ public class Site {
     public final URI getApiUri() {
         return apiUri;
     }
+    
+    /**
+     * Returns the api url set by user.
+     * @return an api url
+     */
+    public final String getApiUrlString() {
+        return apiUrl;
+    }
 
     /**
      * Sets a new api URI. You must call {@link #init()} again to reinitialize
@@ -111,6 +116,7 @@ public class Site {
      */
     public final void setApiUri(String apiUri)throws ApiURIException {
         try {
+            this.apiUrl = apiUri;
             this.apiUri = new URI(apiUri + URI_API_VERSION);
         } catch (URISyntaxException ex) {
             throw new ApiURIException("Could not parse URI: Sure you passed in an"
@@ -227,6 +233,14 @@ public class Site {
         
         return this.applications.getApplication(name);
     }
+
+    /**
+     * Returns all applications for this Site.
+     * @return all apps
+     */
+    public final Applications getApplications() {
+        return applications;
+    }
     
     /**
      * Executes the passed in {@link Statement}. Any result returned can also be fetched by calling
@@ -245,7 +259,32 @@ public class Site {
         if(!initialized) {
             throw new SiteInitializationException("Site not initialized.");
         }
-        return statement.execute(apiUri, customerId, siteId, apiKey, authCookie, refreshAuthCookie);
+        return statement.execute(apiUri, customerId, siteId, apiKey, null);
+    }
+    
+    /**
+     * Executes the passed in {@link Statement}. Any result returned can also be fetched by calling
+     * {@link Statement#getResult() }. If execution fails due to an error thrown from the
+     * remote site API and no {@link ResultSet} was produced then {@link Statement#isExecuted() } will return false.
+     * This method will prioritize the use of user auth cookies over the set api key. Pass in null
+     * for the cookies param to use the set api key.
+     * 
+     * @param statement the {@link Statement} to execute
+     * @param cookies the auth cookies
+     * @return the {@link ResultSet}
+     * @see #execute(io.oopsie.sdk.Statement)
+     * @see #setApiKey(java.lang.String)
+     * @see #login(io.oopsie.sdk.UserCredentials)
+     * @throws AlreadyExecutedException if passed in {@link Statement} was previously executed
+     * @throws StatementExecutionException if execution could not be fullfilled
+     * @throws SiteInitializationException if not initialized properly
+     */
+    public final ResultSet execute(Statement statement, List<String> cookies) throws AlreadyExecutedException,
+            StatementExecutionException, SiteInitializationException  {
+        if(!initialized) {
+            throw new SiteInitializationException("Site not initialized.");
+        }
+        return statement.execute(apiUri, customerId, siteId, apiKey, cookies);
     }
     
     /**
@@ -268,7 +307,36 @@ public class Site {
             throw new SiteInitializationException("Asynchronous execution with page state not supported.");
         }
         return cachedThreadPool.submit(() -> statement.execute(apiUri, customerId, siteId,
-                apiKey, authCookie,refreshAuthCookie));
+                apiKey, null));
+    }
+    
+    /**
+     * Executes passed in {@link Statement} asynchronously.
+     * This method will prioritize the use of user auth cookies over the set api key. Pass in null
+     * for the cookies param to use the set api key.
+     * 
+     * @param statement the {@link Statement} to execute
+     * @param cookies the auth cookies
+     * @return A {@link Future} {@link ResultSet}
+     * @see #executeAsync(io.oopsie.sdk.Statement) 
+     * @see #setApiKey(java.lang.String)
+     * @see #login(io.oopsie.sdk.UserCredentials)
+     * @throws AlreadyExecutedException if passed in {@link Statement} was previously executed
+     * @throws StatementExecutionException if execution could not be fullfilled
+     * @throws SiteInitializationException if not initialized properly
+     */
+    public Future<ResultSet> executeAsync(Statement statement, List<String> cookies) throws AlreadyExecutedException,
+            StatementExecutionException, SiteInitializationException {
+        
+        if(!initialized) {
+            throw new SiteInitializationException("Site not initialized.");
+        }
+        
+        if(statement.isUsingPageState()) {
+            throw new SiteInitializationException("Asynchronous execution with page state not supported.");
+        }
+        return cachedThreadPool.submit(() -> statement.execute(apiUri, customerId, siteId,
+                apiKey, cookies));
     }
     
     /**
@@ -278,6 +346,7 @@ public class Site {
      * @param timeout the time
      * @param timeUnit the time unit
      * @return true if {@link Site} was gracefully closed, false if forced.
+     * @see #close() 
      * 
      */
     public boolean close(long timeout, TimeUnit timeUnit) {
@@ -301,11 +370,26 @@ public class Site {
     }
     
     /**
-     * Register a new user in this Site.
-     * @param userRequest user request info.
-     * @throws StatementExecutionException if registration failed.
+     * Close this {@link Site} immediately. Warning! This methids will not wait
+     * for any running executions to finnish.
+     * To use the {@link Site} object again you need to call {@link #init()} again.
+     * @see #close(long, java.util.concurrent.TimeUnit) 
      */
-    public void register(UserRequest userRequest) throws StatementExecutionException {
+    public void close() {
+        
+        cachedThreadPool.shutdownNow();
+    }
+    
+    /**
+     * Register a new user in this Site. Upon successful registration this
+     * method will return a UserCredential instance.
+     * 
+     * @param userRequest user request info.
+     * @return user credentials.
+     * @throws StatementExecutionException if registration failed.
+     * @see #login(io.oopsie.sdk.UserCredentials) 
+     */
+    public UserCredentials register(UserRequest userRequest) throws StatementExecutionException {
         String regURI = String.join("", apiUri.toString(), "/users/register");
         
         HttpHeaders regHeaders = new HttpHeaders();
@@ -331,14 +415,18 @@ public class Site {
                 throw new StatementExecutionException("Severe: " + ex.getMessage());
             }
         }
+        return new UserCredentials(userRequest.getEmail(), userRequest.getPassword());
     }
     
     /**
-     * Logging in using passed in {@link UserCredentials}.
-     * @param user the user to login 
+     * Logging in using passed in {@link UserCredentials}. The returned array
+     * of cookies is in order (1) the access token cookie, (2) the refresh
+     * token cookie.
+     * @param user the user to login
+     * @return the user auth cookies
      * @throws StatementExecutionException if login failed.
      */
-    public void login(UserCredentials user) throws StatementExecutionException {
+    public List<String> login(UserCredentials user) throws StatementExecutionException {
         
         String loginURI = String.join("",
                 apiUri.toString(),
@@ -369,16 +457,17 @@ public class Site {
         }
         
         List<String> cookies = response.getHeaders().get("Set-Cookie");
-        this.authCookie= cookies.get(0);
-        this.refreshAuthCookie = cookies.get(1);
+        return cookies;
     }
     
     /**
      * Logging out current user session.
      * 
+     * @param cookies the user auth cookies
+     * @see #login(io.oopsie.sdk.UserCredentials) 
      * @throws StatementExecutionException if logout failed.
      */
-    public void logout() throws StatementExecutionException {
+    public void logout(List<String> cookies) throws StatementExecutionException {
         String loginURI = String.join("",
                 apiUri.toString(),
                 "/users/logout");
@@ -386,8 +475,8 @@ public class Site {
         HttpHeaders logoutHeaders = new HttpHeaders();
         logoutHeaders.set("oopsie-customer-id", customerId.toString());
         logoutHeaders.set("oopsie-site-id", siteId.toString());
-        logoutHeaders.add("Cookie", authCookie);
-        logoutHeaders.add("Cookie", refreshAuthCookie);
+        logoutHeaders.add("Cookie", cookies.get(0));
+        logoutHeaders.add("Cookie", cookies.get(1));
         
         HttpEntity logoutEntity =  new HttpEntity(null, logoutHeaders);
         RestTemplate restTemplate = new RestTemplate();
@@ -407,11 +496,16 @@ public class Site {
                 throw new StatementExecutionException("Severe: " + ex.getMessage());
             }
         }
-        this.authCookie = null;
-        this.refreshAuthCookie = null;
     }
     
-    public void refresh() throws StatementExecutionException {
+    /**
+     * Refreshes an expired auth token cookies.
+     * @param cookies the auth token cookies
+     * @return the refreshed auth token cookies.
+     * @see #login(io.oopsie.sdk.UserCredentials) 
+     * @throws StatementExecutionException thrown if execution failed
+     */
+    public List<String> refresh(List<String> cookies) throws StatementExecutionException {
         String loginURI = String.join("",
                 apiUri.toString(),
                 "/users/refresh");
@@ -419,7 +513,7 @@ public class Site {
         HttpHeaders refreshHeaders = new HttpHeaders();
         refreshHeaders.set("oopsie-customer-id", customerId.toString());
         refreshHeaders.set("oopsie-site-id", siteId.toString());
-        refreshHeaders.add("Cookie", refreshAuthCookie);
+        refreshHeaders.add("Cookie", cookies.get(1));
         
         HttpEntity refreshEntity =  new HttpEntity(null, refreshHeaders);
         RestTemplate restTemplate = new RestTemplate();
@@ -441,18 +535,7 @@ public class Site {
             }
         }
         
-        List<String> cookies = response.getHeaders().get("Set-Cookie");
-        this.authCookie= cookies.get(0);
-        this.refreshAuthCookie = cookies.get(1);
-    }
-    
-    /**
-     * Close this {@link Site} immediately. Warning! This methids will not wait
-     * for any running executions to finnish.
-     * To use the {@link Site} object again you need to call {@link #init()} again.
-     */
-    public void close() {
-        
-        cachedThreadPool.shutdownNow();
+        List<String> refreshedCookies = response.getHeaders().get("Set-Cookie");
+        return refreshedCookies;
     }
 }

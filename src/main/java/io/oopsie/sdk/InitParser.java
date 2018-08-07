@@ -20,7 +20,7 @@ class InitParser {
         
         map.keySet().forEach((String appName) -> {
             Map app = map.get(appName);
-            parsedAppMap.put(appName, new Application(new Resources(parseResources((List)app.get("resources")))));
+            parsedAppMap.put(appName, new Application(appName, new Resources(parseResources((List)app.get("resources")))));
         });
         return new Applications(parsedAppMap);
     }

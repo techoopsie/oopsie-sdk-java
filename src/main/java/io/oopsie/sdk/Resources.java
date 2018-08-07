@@ -2,6 +2,7 @@ package io.oopsie.sdk;
 
 import io.oopsie.sdk.error.NotFoundInModelException;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Holds all resources for an {@link Application}
@@ -28,5 +29,13 @@ public class Resources {
             throw new NotFoundInModelException("'" + name + "' not part of this site model.");
         }
         return this.resources.get(name);
+    }
+    
+    /**
+     * Stream representation of this Resources object.
+     * @return a stream of resources.
+     */
+    public final Stream<Resource> stream() {
+        return resources.values().stream();
     }
 }

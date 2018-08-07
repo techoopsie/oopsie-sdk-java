@@ -1,5 +1,6 @@
 package io.oopsie.sdk;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -73,18 +74,48 @@ public class Resource {
     }
     
     /**
-     * Returns all regular attributes.
+     * Returns all attribute names.
      *
-     * @return all regular attribute names
+     * @return all attribute names
      */
     public final Set<String> getAttributeNames() {
         return Collections.unmodifiableSet(attributes.keySet());
     }
     
+    /**
+     * Returns all names of the attributes that can be set by client.
+     * @return settable attributes.
+     */
+    public List<Attribute> getAllSettableAttributes() {
+        
+        List<Attribute> settableAttribs = new ArrayList();
+        for(Attribute a : attributes.values()) {
+            if(a.getName().equalsIgnoreCase("id")) {
+                continue;
+            } else if(
+                a.getType().equals(DataType.CHANGED_AT)
+                ||
+                a.getType().equals(DataType.CHANGED_BY)
+                ||
+                a.getType().equals(DataType.CREATED_AT)
+                ||
+                a.getType().equals(DataType.CREATED_BY)) {
+                continue;
+            } else {
+                settableAttribs.add(a);
+            }
+        }
+        return Collections.unmodifiableList(settableAttribs);
+    }
+    
+    /**
+     * Returns all names of the attributes that can be set by client.
+     * @return settable attribute names.
+     */
     public Set<String> getAllSettableAttributeNames() {
         
         List<Attribute> settableAttribs = attributes.values().stream().filter(a -> 
-                !a.getName().equalsIgnoreCase("id")
+                a.getName().equalsIgnoreCase("id")
                 ||
                 !a.getType().equals(DataType.CHANGED_AT)
                 ||
@@ -213,12 +244,12 @@ public class Resource {
      * the specific reource enitity's primary key params to fetch a specific
      * entity. If any preceeding PK param is missing the GET API will will resolve the correct
      * query by using passed in PK params. The GetStatement returned from this method will be same as calling
-     * {@link #get(java.lang.String)} with the Resource's primary view name.
+     * {@link #get(io.oopsie.sdk.View) } with the Resource's primary view.
      * 
      * @return a {@link GetStatement}
      * @see GetStatement#withParam(java.lang.String, java.lang.Object)
      * @see GetStatement#withParams(java.util.Map) 
-     * @see #get(java.lang.String) 
+     * @see #get(io.oopsie.sdk.View) 
      */
     public GetStatement get() {
         return new GetStatement(this);
@@ -231,12 +262,12 @@ public class Resource {
      * preceeding PK param is missing the GET API will will resolve the correct
      * query by using passed in PK params.
      * 
-     * @param view the view name
+     * @param view the view
      * @return a {@link GetStatement}
      * @see GetStatement#withParam(java.lang.String, java.lang.Object)
      * @see GetStatement#withParams(java.util.Map)
      */
-    public GetStatement get(String view) {
+    public GetStatement get(View view) {
         return new GetStatement(this, view);
     }
     
@@ -250,5 +281,18 @@ public class Resource {
      */
     public DeleteStatement delete() {
         return new DeleteStatement(this);
+    }
+
+    /**
+     * Returns all attributes for the Resource object.
+     * @return all attribuets
+     */
+    public Collection<Attribute> getAttributes() {
+        return Collections.unmodifiableCollection(attributes.values());
+    }
+    
+    @Override
+    public String toString() {
+        return name;
     }
 }

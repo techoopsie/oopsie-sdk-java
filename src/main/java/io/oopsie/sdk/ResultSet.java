@@ -131,8 +131,16 @@ public class ResultSet implements Iterable<Row> {
      * 
      * @return row column meta data.
      */
-        public Map<String, RowColumnMetaData> getColumnMetaData() {
+    public Map<String, RowColumnMetaData> getColumnMetaData() {
         return columnMetaData != null ? Collections.unmodifiableMap(columnMetaData) : Collections.EMPTY_MAP;
+    }
+    
+    /**
+     * Returns the column size.
+     * @return column size
+     */
+    public int getColumnSize() {
+        return getColumnMetaData().size();
     }
 
     private void createRows(List<Map<String, Object>> data) {

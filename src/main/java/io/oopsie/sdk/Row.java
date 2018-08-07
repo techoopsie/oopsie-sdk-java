@@ -1,7 +1,7 @@
 package io.oopsie.sdk;
 
-import com.google.common.collect.Maps;
 import io.oopsie.sdk.error.DataTypeException;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,6 +25,67 @@ public class Row {
     Row(Map<String, ResultSet.RowColumnMetaData> columnMetas, Map<String, Object> data) {
         this.columnMetas = columnMetas;
         this.row = data;
+    }
+    
+    /**
+     * Returns the value object related to passed in column name. 
+     * @param name name of the column to fetch
+     * @return the value of the named column.
+     */
+    public Object get(String name) {
+        
+        Object value = null;
+        DataType dataType = columnMetas.get(name).getDataType();
+        switch(dataType) {
+            case BOOLEAN:
+                value = getBool(name);
+                break;
+            case CHANGED_AT:
+                value = getChangedAt(name);
+                break;
+            case CREATED_AT:
+                value = getCreatedAt(name);
+                break;
+            case TIMESTAMP:
+                value = getTimestamp(name);
+                break;
+            case UUID:
+                value = getUUID(name);
+                break;
+            case CREATED_BY:
+                value = getCreatedBy(name);
+                break;
+            case CHANGED_BY:
+                value = getChangedBy(name);
+                break;
+            case COLLECTION_LIST:
+                value = getList(name);
+                break;
+            case COLLECTION_MAP:
+                value = getMap(name);
+                break;
+            case COLLECTION_SET:
+                value = getSet(name);
+                break;
+            case NUMBER_BIG_INTEGER:
+                value = getLong(name);
+                break;
+            case NUMBER_DECIMAL:
+                value = getDouble(name);
+                break;
+            case NUMBER_INTEGER:
+                value = getInt(name);
+                break;
+            case TEXT:
+                value = getString(name);
+                break;
+            case TUPLE:
+                value = getTuple(name);
+                break;
+            default:
+                throw new DataTypeException("Data tyep not in use: " + dataType.name());
+        }
+        return value;
     }
     
     /**
@@ -75,11 +136,13 @@ public class Row {
         if(val == null) {
             return null;
         }
-        // response from json produces Integers when numbers are low
+        // response from json produces Integers and Strings when numbers are low
         // calling this method expects Long value ..
         long primitive;
         if(val instanceof Integer) {
             primitive = ((Integer)val).longValue();
+        } else if(val instanceof String) {
+            primitive = Long.valueOf((String)val);
         } else {
             primitive =(Long)val;
         }
@@ -100,13 +163,16 @@ public class Row {
         if(val == null) {
             return null;
         }
-        // response from json produces Integers or Longs whwn no decimals are present ... 
+        // response from json is inconsistent, produces Integers, Longs and String
+        //when no decimals are present ... 
         // calling this method expects Double value ..
         double primitive;
         if(val instanceof Integer) {
-            primitive = (double)((Integer)val).intValue();
+            primitive = (double)((Integer)val);
         } else if(val instanceof Long) {
-            primitive = (double)((Long)val).longValue();
+            primitive = (double)((Long)val);
+        } else if(val instanceof String) {
+            primitive = Double.valueOf(val.toString());
         } else {
             primitive =(Double)val;
         }
@@ -144,7 +210,47 @@ public class Row {
         if(val == null) {
             return null;
         }
-        return new Date((Long)val);
+        Instant instant = Instant.parse(val.toString());
+        Date parsedTimestamp = Date.from(instant);
+        return parsedTimestamp;
+    }
+    
+    /**
+     * Returns the value for name as Date.
+     * 
+     * @param name the name of the row column
+     * @return valus as Date
+     * @throws DataTypeException if not able to cast to Date
+     * @throws IllegalArgumentException if name is not part of this row
+     */
+    public Date getChangedAt(String name) throws DataTypeException, IllegalArgumentException {
+        checkNameAndType(name, DataType.CHANGED_AT);
+        Object val = row.get(name);
+        if(val == null) {
+            return null;
+        }
+        Instant instant = Instant.parse(val.toString());
+        Date parsedTimestamp = Date.from(instant);
+        return parsedTimestamp;
+    }
+    
+    /**
+     * Returns the value for name as Date.
+     * 
+     * @param name the name of the row column
+     * @return valus as Date
+     * @throws DataTypeException if not able to cast to Date
+     * @throws IllegalArgumentException if name is not part of this row
+     */
+    public Date getCreatedAt(String name) throws DataTypeException, IllegalArgumentException {
+        checkNameAndType(name, DataType.CREATED_AT);
+        Object val = row.get(name);
+        if(val == null) {
+            return null;
+        }
+        Instant instant = Instant.parse(val.toString());
+        Date parsedTimestamp = Date.from(instant);
+        return parsedTimestamp;
     }
     
     /**
@@ -225,6 +331,40 @@ public class Row {
      */
     public UUID getUUID(String name) throws DataTypeException, IllegalArgumentException {
         checkNameAndType(name, DataType.UUID);
+        Object val = row.get(name);
+        if(val == null) {
+            return null;
+        }
+        return UUID.fromString(val.toString());
+    }
+    
+    /**
+     * Returns the value for name as UUID.
+     * 
+     * @param name the name of the row column
+     * @return value as UUID
+     * @throws DataTypeException if not able to cast to UUID
+     * @throws IllegalArgumentException if name is not part of this row
+     */
+    public UUID getChangedBy(String name) throws DataTypeException, IllegalArgumentException {
+        checkNameAndType(name, DataType.CHANGED_BY);
+        Object val = row.get(name);
+        if(val == null) {
+            return null;
+        }
+        return UUID.fromString(val.toString());
+    }
+    
+    /**
+     * Returns the value for name as UUID.
+     * 
+     * @param name the name of the row column
+     * @return value as UUID
+     * @throws DataTypeException if not able to cast to UUID
+     * @throws IllegalArgumentException if name is not part of this row
+     */
+    public UUID getCreatedBy(String name) throws DataTypeException, IllegalArgumentException {
+        checkNameAndType(name, DataType.CREATED_BY);
         Object val = row.get(name);
         if(val == null) {
             return null;
