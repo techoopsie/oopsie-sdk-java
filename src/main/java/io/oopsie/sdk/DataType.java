@@ -17,6 +17,7 @@ public enum DataType {
     CREATED_BY("Created By"),
     CHANGED_AT("Changed At"),
     CHANGED_BY("Changed By"),
+    BINARY("Binary"),
     UNDEFINED("Undefined");
     
     private final String humanName;
