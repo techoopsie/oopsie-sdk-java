@@ -6,7 +6,7 @@
 
     <groupId>io.oopsie</groupId>
     <artifactId>oopsie-sdk-java</artifactId>
-    <version>dev-SNAPSHOT</version>
+    <version>1.1</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>OOPSIE Java SDK</description>
     <url>https://oopsie.io</url>
