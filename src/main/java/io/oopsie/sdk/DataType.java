@@ -5,9 +5,9 @@ public enum DataType {
     BOOLEAN("Boolean"),
     TEXT("Text"),
     TIMESTAMP("Timestamp"),
-    NUMBER_DECIMAL("Decimal"),
-    NUMBER_BIG_INTEGER("Long"),
-    NUMBER_INTEGER("Integer"),
+    DECIMAL("Decimal"),
+    BIG_INTEGER("Long"),
+    INTEGER("Integer"),
     UUID("UUID"),
     COLLECTION_SET("Set"),
     COLLECTION_LIST("List"),
@@ -17,6 +17,7 @@ public enum DataType {
     CREATED_BY("Created By"),
     CHANGED_AT("Changed At"),
     CHANGED_BY("Changed By"),
+    BINARY("Binary"),
     UNDEFINED("Undefined");
     
     private final String humanName;

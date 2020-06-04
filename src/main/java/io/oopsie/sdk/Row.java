@@ -67,13 +67,13 @@ public class Row {
             case COLLECTION_SET:
                 value = getSet(name);
                 break;
-            case NUMBER_BIG_INTEGER:
+            case BIG_INTEGER:
                 value = getLong(name);
                 break;
-            case NUMBER_DECIMAL:
+            case DECIMAL:
                 value = getDouble(name);
                 break;
-            case NUMBER_INTEGER:
+            case INTEGER:
                 value = getInt(name);
                 break;
             case TEXT:
@@ -114,7 +114,7 @@ public class Row {
      * @throws IllegalArgumentException if name is not part of this row
      */
     public Integer getInt(String name) throws DataTypeException, IllegalArgumentException {
-        checkNameAndType(name, DataType.NUMBER_INTEGER);
+        checkNameAndType(name, DataType.INTEGER);
         Object val = row.get(name);
         if(val == null) {
             return null;
@@ -131,7 +131,7 @@ public class Row {
      * @throws IllegalArgumentException if name is not part of this row
      */
     public Long getLong(String name) throws DataTypeException, IllegalArgumentException {
-        checkNameAndType(name, DataType.NUMBER_BIG_INTEGER);
+        checkNameAndType(name, DataType.BIG_INTEGER);
         Object val = row.get(name);
         if(val == null) {
             return null;
@@ -158,7 +158,7 @@ public class Row {
      * @throws IllegalArgumentException if name is not part of this row
      */
     public Double getDouble(String name) throws DataTypeException, IllegalArgumentException {
-        checkNameAndType(name, DataType.NUMBER_DECIMAL);
+        checkNameAndType(name, DataType.DECIMAL);
         Object val = row.get(name);
         if(val == null) {
             return null;
